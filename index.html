@@ -84,55 +84,60 @@
     }
 
     function loadUserContributions() {
-      clearStatus();
-      if (!currentUser) return;
-      const dateRange = document.getElementById('dateRangeSelect').value;
-      document.getElementById('resultStatus').innerText = 'Fetching contribution data... Please wait.';
-      document.getElementById('contributionTable').innerHTML = '';
+  clearStatus();
+  if (!currentUser) return;
+  const dateRange = document.getElementById('dateRangeSelect').value;
+  document.getElementById('resultStatus').innerText = 'Fetching contribution data... Please wait.';
+  document.getElementById('contributionTable').innerHTML = '';
 
-      if (isAdmin) {
-        google.script.run
-          .withSuccessHandler(function(data) {
-            document.getElementById('resultStatus').innerText = '';
-            if (!data || data.length === 0) {
-              document.getElementById('contributionTable').innerHTML = '<p>No contribution data found.</p>';
-              return;
-            }
-            let html = '<table><tr><th>Username</th><th>Total Contribution</th></tr>';
-            data.forEach(row => {
-              html += `<tr><td>${row.username}</td><td>${row.total}</td></tr>`;
-            });
-            html += '</table>';
-            document.getElementById('contributionTable').innerHTML = html;
-          })
-          .withFailureHandler(err => {
-            document.getElementById('resultStatus').innerText = '';
-            alert('Error: ' + err.message);
-          })
-          .getAllUserContributionTotals(dateRange);
-      } else {
-        google.script.run
-          .withSuccessHandler(function(data) {
-            document.getElementById('resultStatus').innerText = '';
-            if (!data || data.length === 0) {
-              document.getElementById('contributionTable').innerHTML = '<p>No data found.</p>';
-              return;
-            }
-            let html = '<table><tr><th>Kingdom ID</th><th>Name</th><th>Continent</th><th>Total</th></tr>';
-            data.forEach(c => {
-              html += `<tr><td>${c.kingdomId}</td><td>${c.name}</td><td>${c.continent}</td><td>${c.total}</td></tr>`;
-            });
-            html += '</table>';
-            document.getElementById('contributionTable').innerHTML = html;
-          })
-          .withFailureHandler(err => {
-            document.getElementById('resultStatus').innerText = '';
-            alert('Error: ' + err.message);
-          })
-          .getUserContribution(currentUser, dateRange);
-      }
-    }
+  if (isAdmin) {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        console.log("Admin Data:", data);
+        document.getElementById('resultStatus').innerText = '';
 
+        if (!Array.isArray(data) || data.length === 0) {
+          document.getElementById('contributionTable').innerHTML = '<p>No contribution data found.</p>';
+          return;
+        }
+
+        let html = '<table><tr><th>Username</th><th>Total Contribution</th></tr>';
+        data.forEach(row => {
+          html += `<tr><td>${row.username}</td><td>${row.total}</td></tr>`;
+        });
+        html += '</table>';
+        document.getElementById('contributionTable').innerHTML = html;
+      })
+      .withFailureHandler(err => {
+        document.getElementById('resultStatus').innerText = '';
+        alert('Error: ' + err.message);
+      })
+      .getAllUserContributionTotals(dateRange);
+  } else {
+    google.script.run
+      .withSuccessHandler(function(data) {
+        console.log("User Data:", data);
+        document.getElementById('resultStatus').innerText = '';
+
+        if (!Array.isArray(data) || data.length === 0) {
+          document.getElementById('contributionTable').innerHTML = '<p>No data found.</p>';
+          return;
+        }
+
+        let html = '<table><tr><th>Kingdom ID</th><th>Name</th><th>Continent</th><th>Total</th></tr>';
+        data.forEach(c => {
+          html += `<tr><td>${c.kingdomId}</td><td>${c.name}</td><td>${c.continent}</td><td>${c.total}</td></tr>`;
+        });
+        html += '</table>';
+        document.getElementById('contributionTable').innerHTML = html;
+      })
+      .withFailureHandler(err => {
+        document.getElementById('resultStatus').innerText = '';
+        alert('Error: ' + err.message);
+      })
+      .getUserContribution(currentUser, dateRange);
+  }
+}
     function loadAllUserList() {
       google.script.run.withSuccessHandler(function(userList) {
         const select = document.getElementById('adminUserSelect');
