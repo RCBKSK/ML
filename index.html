@@ -1,179 +1,322 @@
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index.html');
-}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LOK Contribution Portal</title>
+  <style>
+    .page { display: none; padding: 20px; }
+    .page.active { display: block; }
+    body { font-family: Arial, sans-serif; margin: 0; }
+    input, select, textarea, button { 
+      margin: 8px 0; 
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      box-sizing: border-box;
+    }
+    button { 
+      background: #4285f4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #3367d6; }
+    .status { margin: 10px 0; min-height: 20px; }
+    .error { color: #d32f2f; }
+    .success { color: #388e3c; }
+    table { 
+      width: 100%; 
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td { 
+      padding: 12px; 
+      text-align: left; 
+      border-bottom: 1px solid #ddd;
+    }
+    th { background: #f5f5f5; }
+    .admin-panel { 
+      background: #f9f9f9;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 4px;
+    }
+    .header { 
+      background: #4285f4;
+      color: white;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .container { padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>LOK Contribution Portal</h1>
+  </div>
 
-// Helper function to check if sheet exists
-function checkSheetExists(sheetName) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(sheetName);
-  if (!sheet) throw new Error(`Sheet '${sheetName}' not found`);
-  return sheet;
-}
+  <div class="container">
+    <!-- Login Page -->
+    <div id="loginPage" class="page active">
+      <h2>Login</h2>
+      <input id="loginUsername" type="text" placeholder="Username" required>
+      <button onclick="login()">Login</button>
+      <div id="loginStatus" class="status"></div>
+      <p>Don't have an account? <a href="#" onclick="showPage('registerPage')">Register here</a></p>
+    </div>
 
-// Only function that writes to spreadsheet
-function registerUser(username, wallet, kingdomIds) {
-  try {
-    const sheet = checkSheetExists('Users');
-    const existingUsers = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat();
-    
-    if (existingUsers.includes(username)) {
-      return { success: false, message: 'Username already exists.' };
+    <!-- Registration Page -->
+    <div id="registerPage" class="page">
+      <h2>Register New Account</h2>
+      <input id="regUsername" type="text" placeholder="Username" required>
+      <input id="regWallet" type="text" placeholder="Wallet Address" required>
+      <textarea id="regKingdoms" placeholder="Comma-separated Kingdom IDs"></textarea>
+      <button onclick="register()">Register</button>
+      <div id="registerStatus" class="status"></div>
+      <p>Already registered? <a href="#" onclick="showPage('loginPage')">Login here</a></p>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="resultsPage" class="page">
+      <div style="display:flex; justify-content:space-between; align-items:center">
+        <h2>Contribution Dashboard</h2>
+        <button onclick="logout()">Logout</button>
+      </div>
+      
+      <p>Welcome, <strong id="usernameDisplay"></strong></p>
+      
+      <label for="dateRangeSelect">Date Range:</label>
+      <select id="dateRangeSelect" onchange="loadUserContributions()">
+        <option value="currentWeek">Current Week</option>
+        <option value="lastWeek">Last Week</option>
+        <option value="currentMonth" selected>Current Month</option>
+        <option value="lastMonth">Last Month</option>
+      </select>
+      
+      <div id="resultStatus" class="status"></div>
+      <div id="contributionTable"></div>
+
+      <!-- Admin Panel (only visible to admins) -->
+      <div id="adminPanel" class="admin-panel" style="display:none">
+        <h3>Admin Panel</h3>
+        <select id="adminUserSelect" onchange="loadUserDetails()">
+          <option value="">Select User</option>
+        </select>
+        <div id="userDetails" style="margin-top:15px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let isAdmin = false;
+    const admins = ['rcbk', 'ml'];
+
+    // Page navigation
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      document.getElementById(pageId).classList.add('active');
+      clearStatus();
     }
 
-    sheet.appendRow([username, wallet, JSON.stringify(kingdomIds)]);
-    return { success: true, message: 'Registered successfully!' };
-  } catch (e) {
-    console.error("Error in registerUser:", e);
-    return { success: false, message: "Error: " + e.message };
-  }
-}
+    function clearStatus() {
+      document.querySelectorAll('.status').forEach(el => {
+        el.textContent = '';
+        el.className = 'status';
+      });
+    }
 
-// Read-only functions below
-function validateUser(username) {
-  try {
-    const sheet = checkSheetExists('Users');
-    const data = sheet.getDataRange().getValues();
-    return data.some(row => row[0] === username);
-  } catch (e) {
-    console.error("Error in validateUser:", e);
-    return false;
-  }
-}
+    function showStatus(elementId, message, isError = false) {
+      const el = document.getElementById(elementId);
+      el.textContent = message;
+      el.className = `status ${isError ? 'error' : 'success'}`;
+    }
 
-function getUserDetails(username) {
-  try {
-    const sheet = checkSheetExists('Users');
-    const data = sheet.getDataRange().getValues();
-    
-    for (let row of data) {
-      if (row[0] === username) {
-        let kingdoms = [];
-        try {
-          kingdoms = typeof row[2] === 'string' ? JSON.parse(row[2]) : row[2];
-          if (!Array.isArray(kingdoms)) kingdoms = [];
-        } catch (e) {
-          kingdoms = [];
-        }
-        return {
-          wallet: row[1],
-          kingdomIds: kingdoms
-        };
+    // User authentication
+    function login() {
+      const username = document.getElementById('loginUsername').value.trim();
+      if (!username) {
+        showStatus('loginStatus', 'Please enter username', true);
+        return;
       }
-    }
-    return null;
-  } catch (e) {
-    console.error("Error in getUserDetails:", e);
-    return null;
-  }
-}
 
-function getUserContribution(username, rangeKey) {
-  try {
-    const userData = checkSheetExists('Users').getDataRange().getValues();
-    const logsData = checkSheetExists('Logs').getDataRange().getValues();
-    
-    // Process user's kingdoms
-    const userKingdoms = {};
-    for (let row of userData) {
-      if (row[0] === username) {
-        try {
-          const kingdoms = typeof row[2] === 'string' ? JSON.parse(row[2]) : row[2];
-          if (Array.isArray(kingdoms)) {
-            kingdoms.forEach(id => userKingdoms[id] = true);
+      showStatus('loginStatus', 'Authenticating...');
+      
+      google.script.run
+        .withSuccessHandler(exists => {
+          if (exists) {
+            currentUser = username;
+            isAdmin = admins.includes(username.toLowerCase());
+            document.getElementById('usernameDisplay').textContent = username;
+            document.getElementById('adminPanel').style.display = isAdmin ? 'block' : 'none';
+            showPage('resultsPage');
+            loadUserContributions();
+            if (isAdmin) loadAllUserList();
+          } else {
+            showStatus('loginStatus', 'User not found. Please register.', true);
           }
-        } catch (e) {}
-        break;
+        })
+        .withFailureHandler(error => {
+          showStatus('loginStatus', 'Login failed: ' + error.message, true);
+        })
+        .validateUser(username);
+    }
+
+    function register() {
+      const username = document.getElementById('regUsername').value.trim();
+      const wallet = document.getElementById('regWallet').value.trim();
+      const kingdoms = document.getElementById('regKingdoms').value.trim();
+      
+      if (!username || !wallet) {
+        showStatus('registerStatus', 'Username and wallet are required', true);
+        return;
+      }
+
+      showStatus('registerStatus', 'Registering...');
+      const kingdomIds = kingdoms ? kingdoms.split(',').map(k => k.trim()).filter(k => k) : [];
+      
+      google.script.run
+        .withSuccessHandler(response => {
+          if (response.success) {
+            showStatus('registerStatus', 'Registration successful!');
+            setTimeout(() => showPage('loginPage'), 1500);
+          } else {
+            showStatus('registerStatus', response.message, true);
+          }
+        })
+        .withFailureHandler(error => {
+          showStatus('registerStatus', 'Registration failed: ' + error.message, true);
+        })
+        .registerUser(username, wallet, kingdomIds);
+    }
+
+    function logout() {
+      currentUser = null;
+      isAdmin = false;
+      document.getElementById('loginUsername').value = '';
+      showPage('loginPage');
+    }
+
+    // Data display functions
+    function loadUserContributions() {
+      if (!currentUser) return;
+      
+      const range = document.getElementById('dateRangeSelect').value;
+      const table = document.getElementById('contributionTable');
+      table.innerHTML = '';
+      showStatus('resultStatus', 'Loading data...');
+      
+      const handler = isAdmin ? 'getAllUserContributionTotals' : 'getUserContribution';
+      const args = isAdmin ? [range] : [currentUser, range];
+      
+      google.script.run
+        .withSuccessHandler(data => {
+          if (!data || data.length === 0) {
+            showStatus('resultStatus', 'No contributions found');
+            return;
+          }
+          
+          showStatus('resultStatus', 'Data loaded successfully');
+          renderContributionTable(data);
+        })
+        .withFailureHandler(error => {
+          showStatus('resultStatus', 'Error loading data: ' + error.message, true);
+        })
+        [handler](...args);
+    }
+
+    function renderContributionTable(data) {
+      const table = document.getElementById('contributionTable');
+      
+      if (isAdmin) {
+        // Admin view - show all users' totals
+        let html = `
+          <table>
+            <thead><tr><th>Username</th><th>Total Contribution</th></tr></thead>
+            <tbody>
+        `;
+        data.forEach(user => {
+          html += `<tr><td>${user.username}</td><td>${user.total}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        table.innerHTML = html;
+      } else {
+        // User view - show detailed contributions
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>Kingdom ID</th>
+                <th>Name</th>
+                <th>Continent</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        data.forEach(contrib => {
+          html += `
+            <tr>
+              <td>${contrib.kingdomId}</td>
+              <td>${contrib.name || ''}</td>
+              <td>${contrib.continent || ''}</td>
+              <td>${contrib.total}</td>
+            </tr>
+          `;
+        });
+        html += `</tbody></table>`;
+        table.innerHTML = html;
       }
     }
 
-    // Calculate date range
-    const now = new Date();
-    let fromDate;
-    switch (rangeKey) {
-      case 'currentWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay())); break;
-      case 'lastWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay() - 7)); break;
-      case 'lastMonth': fromDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break;
-      default: fromDate = new Date(now.getFullYear(), now.getMonth(), 1); // currentMonth
+    function loadAllUserList() {
+      google.script.run
+        .withSuccessHandler(users => {
+          const select = document.getElementById('adminUserSelect');
+          select.innerHTML = '<option value="">Select User</option>';
+          users.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user;
+            option.textContent = user;
+            select.appendChild(option);
+          });
+        })
+        .getAllUsernames();
     }
 
-    // Process contributions
-    const contributions = {};
-    for (let row of logsData) {
-      const logDate = new Date(row[0]);
-      if (logDate < fromDate) continue;
-      
-      const kingdomId = row[1];
-      if (!userKingdoms[kingdomId]) continue;
-
-      if (!contributions[kingdomId]) {
-        contributions[kingdomId] = {
-          kingdomId: kingdomId,
-          name: row[2],
-          continent: row[3],
-          total: 0
-        };
+    function loadUserDetails() {
+      const username = document.getElementById('adminUserSelect').value;
+      if (!username) {
+        document.getElementById('userDetails').innerHTML = '';
+        return;
       }
-      contributions[kingdomId].total += row[5];
-    }
-
-    return Object.values(contributions);
-  } catch (e) {
-    console.error("Error in getUserContribution:", e);
-    return [];
-  }
-}
-
-function getAllUserContributionTotals(rangeKey) {
-  try {
-    const userData = checkSheetExists('Users').getDataRange().getValues();
-    const logsData = checkSheetExists('Logs').getDataRange().getValues();
-    
-    // Map kingdom IDs to usernames
-    const userMap = {};
-    userData.forEach(row => {
-      try {
-        const kingdoms = typeof row[2] === 'string' ? JSON.parse(row[2]) : row[2];
-        if (Array.isArray(kingdoms)) {
-          kingdoms.forEach(id => userMap[id] = row[0]);
-        }
-      } catch (e) {}
-    });
-
-    // Calculate date range
-    const now = new Date();
-    let fromDate;
-    switch (rangeKey) {
-      case 'currentWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay())); break;
-      case 'lastWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay() - 7)); break;
-      case 'lastMonth': fromDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break;
-      default: fromDate = new Date(now.getFullYear(), now.getMonth(), 1); // currentMonth
-    }
-
-    // Calculate totals
-    const totals = {};
-    for (let row of logsData) {
-      const logDate = new Date(row[0]);
-      if (logDate < fromDate) continue;
       
-      const user = userMap[row[1]];
-      if (!user) continue;
-
-      totals[user] = (totals[user] || 0) + row[5];
+      document.getElementById('userDetails').innerHTML = 'Loading...';
+      
+      google.script.run
+        .withSuccessHandler(details => {
+          if (!details) {
+            document.getElementById('userDetails').innerHTML = 'No details found';
+            return;
+          }
+          
+          let html = `
+            <p><strong>Wallet:</strong> ${details.wallet || 'Not specified'}</p>
+            <p><strong>Kingdoms:</strong> ${details.kingdomIds?.join(', ') || 'None'}</p>
+          `;
+          document.getElementById('userDetails').innerHTML = html;
+        })
+        .withFailureHandler(error => {
+          document.getElementById('userDetails').innerHTML = 'Error loading details';
+        })
+        .getUserDetails(username);
     }
 
-    return Object.entries(totals).map(([username, total]) => ({ username, total }));
-  } catch (e) {
-    console.error("Error in getAllUserContributionTotals:", e);
-    return [];
-  }
-}
-
-function getAllUsernames() {
-  try {
-    const data = checkSheetExists('Users').getDataRange().getValues();
-    return data.map(row => row[0]).filter(name => name && name !== 'Username');
-  } catch (e) {
-    console.error("Error in getAllUsernames:", e);
-    return [];
-  }
-}
+    // Initialize
+    window.onload = function() {
+      showPage('loginPage');
+    };
+  </script>
+</body>
+</html>
