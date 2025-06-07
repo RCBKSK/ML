@@ -1,241 +1,179 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>LOK Contribution Portal</title>
-  <style>
-    .page { display: none; }
-    .page.active { display: block; }
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, select, textarea, button { margin: 5px 0; padding: 8px; width: 300px; max-width: 100%; }
-    button { cursor: pointer; }
-    .status { color: blue; margin: 10px 0; }
-    table { border-collapse: collapse; width: 100%; max-width: 800px; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f0f0f0; }
-  </style>
-  <script>
-    let currentUser = null;
-    let isAdmin = false;
-
-    const admins = ['rcbk', 'ml'];
-
-    function showPage(id) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      clearStatus();
-    }
-
-    function clearStatus() {
-      document.querySelectorAll('.status').forEach(s => s.innerText = '');
-    }
-
-    function login() {
-      clearStatus();
-      const username = document.getElementById('loginUsername').value.trim();
-      if (!username) {
-        alert('Please enter your username.');
-        return;
-      }
-      document.getElementById('loginStatus').innerText = 'Checking user... Please wait.';
-      google.script.run
-        .withSuccessHandler(function(exists) {
-          if (exists) {
-            currentUser = username;
-            isAdmin = admins.includes(username.toLowerCase());
-            document.getElementById('loginStatus').innerText = '';
-            showPage('resultsPage');
-            document.getElementById('adminPanel').style.display = isAdmin ? 'block' : 'none';
-            document.getElementById('usernameDisplay').innerText = currentUser;
-            loadUserContributions();
-            if (isAdmin) loadAllUserList();
-          } else {
-            alert('User not found. Please register first.');
-            document.getElementById('loginStatus').innerText = '';
-          }
-        })
-        .withFailureHandler(function(err) {
-          alert('Error during login: ' + err.message);
-          document.getElementById('loginStatus').innerText = '';
-        })
-        .validateUser(username);
-    }
-
-    function register() {
-      clearStatus();
-      const username = document.getElementById('regUsername').value.trim();
-      const wallet = document.getElementById('regWallet').value.trim();
-      const kingdomsText = document.getElementById('regKingdoms').value.trim();
-      if (!username || !wallet) {
-        alert('Please fill in username and wallet address.');
-        return;
-      }
-      const kingdomIds = kingdomsText ? kingdomsText.split(',').map(k => k.trim()).filter(k => k) : [];
-      document.getElementById('registerStatus').innerText = 'Registering... Please wait.';
-      google.script.run
-        .withSuccessHandler(function(res) {
-          alert(res.message);
-          document.getElementById('registerStatus').innerText = '';
-          if (res.success) showPage('loginPage');
-        })
-        .withFailureHandler(function(err) {
-          alert('Error during registration: ' + err.message);
-          document.getElementById('registerStatus').innerText = '';
-        })
-        .registerUser(username, wallet, kingdomIds);
-    }
-
-    function loadUserContributions() {
-      clearStatus();
-      if (!currentUser) return;
-      const dateRange = document.getElementById('dateRangeSelect').value;
-      document.getElementById('resultStatus').innerText = 'Fetching contribution data... Please wait.';
-      document.getElementById('contributionTable').innerHTML = '';
-
-      if (isAdmin) {
-        google.script.run
-          .withSuccessHandler(function(data) {
-            document.getElementById('resultStatus').innerText = '';
-            if (!data || data.length === 0) {
-              document.getElementById('contributionTable').innerHTML = '<p>No contribution data found.</p>';
-              return;
-            }
-            let html = '<table><tr><th>Username</th><th>Total Contribution</th></tr>';
-            data.forEach(row => {
-              html += `<tr><td>${row.username}</td><td>${row.total}</td></tr>`;
-            });
-            html += '</table>';
-            document.getElementById('contributionTable').innerHTML = html;
-          })
-          .withFailureHandler(err => {
-            document.getElementById('resultStatus').innerText = '';
-            alert('Error: ' + err.message);
-          })
-          .getAllUserContributionTotals(dateRange);
-      } else {
-        google.script.run
-          .withSuccessHandler(function(data) {
-            document.getElementById('resultStatus').innerText = '';
-            if (!data || data.length === 0) {
-              document.getElementById('contributionTable').innerHTML = '<p>No data found.</p>';
-              return;
-            }
-            let html = '<table><tr><th>Kingdom ID</th><th>Name</th><th>Continent</th><th>Total</th></tr>';
-            data.forEach(c => {
-              html += `<tr><td>${c.kingdomId}</td><td>${c.name}</td><td>${c.continent}</td><td>${c.total}</td></tr>`;
-            });
-            html += '</table>';
-            document.getElementById('contributionTable').innerHTML = html;
-          })
-          .withFailureHandler(err => {
-            document.getElementById('resultStatus').innerText = '';
-            alert('Error: ' + err.message);
-          })
-          .getUserContribution(currentUser, dateRange);
-      }
-    }
-
-    function loadAllUserList() {
-      google.script.run.withSuccessHandler(function(userList) {
-        const select = document.getElementById('adminUserSelect');
-        select.innerHTML = '<option value="">-- Choose a user --</option>';
-        userList.forEach(user => {
-          const option = document.createElement('option');
-          option.value = user;
-          option.textContent = user;
-          select.appendChild(option);
-        });
-      }).getAllUsernames();
-    }
-
-    function loadUserDetails() {
-  const username = document.getElementById('adminUserSelect').value;
-  if (!username) {
-    document.getElementById('userDetails').innerText = '';
-    return;
-  }
-  document.getElementById('userDetails').innerText = 'Loading...';
-  google.script.run.withSuccessHandler(function(data) {
-    if (!data) {
-      document.getElementById('userDetails').innerText = 'User not found.';
-      return;
-    }
-
-    let kingdoms = [];
-    try {
-      if (Array.isArray(data.kingdomIds)) {
-        kingdoms = data.kingdomIds;
-      } else if (typeof data.kingdomIds === 'string') {
-        kingdoms = JSON.parse(data.kingdomIds);
-      }
-    } catch (e) {
-      console.warn('Invalid kingdomIds format:', data.kingdomIds);
-    }
-
-    let html = `<p><strong>Wallet:</strong> ${data.wallet}</p>`;
-    html += `<p><strong>Kingdoms:</strong> ${kingdoms.length ? kingdoms.join(', ') : 'None'}</p>`;
-    document.getElementById('userDetails').innerHTML = html;
-  }).getUserDetails(username);
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('index.html');
 }
 
-    function logout() {
-      currentUser = null;
-      isAdmin = false;
-      showPage('loginPage');
-      document.getElementById('loginUsername').value = '';
-      document.getElementById('adminPanel').style.display = 'none';
-      document.getElementById('usernameDisplay').innerText = '';
-      document.getElementById('contributionTable').innerHTML = '';
+// Helper function to check if sheet exists
+function checkSheetExists(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+  if (!sheet) throw new Error(`Sheet '${sheetName}' not found`);
+  return sheet;
+}
+
+// Only function that writes to spreadsheet
+function registerUser(username, wallet, kingdomIds) {
+  try {
+    const sheet = checkSheetExists('Users');
+    const existingUsers = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat();
+    
+    if (existingUsers.includes(username)) {
+      return { success: false, message: 'Username already exists.' };
     }
 
-    window.onload = function() {
-      showPage('loginPage');
+    sheet.appendRow([username, wallet, JSON.stringify(kingdomIds)]);
+    return { success: true, message: 'Registered successfully!' };
+  } catch (e) {
+    console.error("Error in registerUser:", e);
+    return { success: false, message: "Error: " + e.message };
+  }
+}
+
+// Read-only functions below
+function validateUser(username) {
+  try {
+    const sheet = checkSheetExists('Users');
+    const data = sheet.getDataRange().getValues();
+    return data.some(row => row[0] === username);
+  } catch (e) {
+    console.error("Error in validateUser:", e);
+    return false;
+  }
+}
+
+function getUserDetails(username) {
+  try {
+    const sheet = checkSheetExists('Users');
+    const data = sheet.getDataRange().getValues();
+    
+    for (let row of data) {
+      if (row[0] === username) {
+        let kingdoms = [];
+        try {
+          kingdoms = typeof row[2] === 'string' ? JSON.parse(row[2]) : row[2];
+          if (!Array.isArray(kingdoms)) kingdoms = [];
+        } catch (e) {
+          kingdoms = [];
+        }
+        return {
+          wallet: row[1],
+          kingdomIds: kingdoms
+        };
+      }
+    }
+    return null;
+  } catch (e) {
+    console.error("Error in getUserDetails:", e);
+    return null;
+  }
+}
+
+function getUserContribution(username, rangeKey) {
+  try {
+    const userData = checkSheetExists('Users').getDataRange().getValues();
+    const logsData = checkSheetExists('Logs').getDataRange().getValues();
+    
+    // Process user's kingdoms
+    const userKingdoms = {};
+    for (let row of userData) {
+      if (row[0] === username) {
+        try {
+          const kingdoms = typeof row[2] === 'string' ? JSON.parse(row[2]) : row[2];
+          if (Array.isArray(kingdoms)) {
+            kingdoms.forEach(id => userKingdoms[id] = true);
+          }
+        } catch (e) {}
+        break;
+      }
     }
 
+    // Calculate date range
+    const now = new Date();
+    let fromDate;
+    switch (rangeKey) {
+      case 'currentWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay())); break;
+      case 'lastWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay() - 7)); break;
+      case 'lastMonth': fromDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break;
+      default: fromDate = new Date(now.getFullYear(), now.getMonth(), 1); // currentMonth
+    }
 
+    // Process contributions
+    const contributions = {};
+    for (let row of logsData) {
+      const logDate = new Date(row[0]);
+      if (logDate < fromDate) continue;
+      
+      const kingdomId = row[1];
+      if (!userKingdoms[kingdomId]) continue;
 
-  </script>
-</head>
-<body>
-  <div id="loginPage" class="page">
-    <h2>Login</h2>
-    <input id="loginUsername" type="text" placeholder="Enter Username" autocomplete="off" /><br/>
-    <button onclick="login()">Login</button>
-    <div id="loginStatus" class="status"></div>
-    <p>New user? <a href="javascript:void(0)" onclick="showPage('registerPage')">Register here</a></p>
-  </div>
+      if (!contributions[kingdomId]) {
+        contributions[kingdomId] = {
+          kingdomId: kingdomId,
+          name: row[2],
+          continent: row[3],
+          total: 0
+        };
+      }
+      contributions[kingdomId].total += row[5];
+    }
 
-  <div id="registerPage" class="page">
-    <h2>Register</h2>
-    <input id="regUsername" type="text" placeholder="Set Username" autocomplete="off" /><br/>
-    <input id="regWallet" type="text" placeholder="Wallet Address" autocomplete="off" /><br/>
-    <textarea id="regKingdoms" rows="3" placeholder="Enter Kingdom UIDs, comma separated"></textarea><br/>
-    <button onclick="register()">Register</button>
-    <div id="registerStatus" class="status"></div>
-    <p>Already have an account? <a href="javascript:void(0)" onclick="showPage('loginPage')">Login here</a></p>
-  </div>
+    return Object.values(contributions);
+  } catch (e) {
+    console.error("Error in getUserContribution:", e);
+    return [];
+  }
+}
 
-  <div id="resultsPage" class="page">
-    <h2 id="resultsTitle">Contribution Dashboard</h2>
-    <p>Welcome, <strong><span id="usernameDisplay"></span></strong>! <button onclick="logout()">Logout</button></p>
-    <label for="dateRangeSelect">Select Date Range:</label><br/>
-    <select id="dateRangeSelect" onchange="loadUserContributions()">
-      <option value="currentWeek">Current Week</option>
-      <option value="lastWeek">Last Week</option>
-      <option value="currentMonth" selected>Current Month</option>
-      <option value="lastMonth">Last Month</option>
-    </select>
-    <div id="resultStatus" class="status"></div>
-    <div id="contributionTable"></div>
+function getAllUserContributionTotals(rangeKey) {
+  try {
+    const userData = checkSheetExists('Users').getDataRange().getValues();
+    const logsData = checkSheetExists('Logs').getDataRange().getValues();
+    
+    // Map kingdom IDs to usernames
+    const userMap = {};
+    userData.forEach(row => {
+      try {
+        const kingdoms = typeof row[2] === 'string' ? JSON.parse(row[2]) : row[2];
+        if (Array.isArray(kingdoms)) {
+          kingdoms.forEach(id => userMap[id] = row[0]);
+        }
+      } catch (e) {}
+    });
 
-    <!-- Admin Panel -->
-    <div id="adminPanel" style="display:none; border:1px solid #ccc; padding:10px; margin-top:20px;">
-      <h3>Admin Panel</h3>
-      <label for="adminUserSelect">Select User:</label><br/>
-      <select id="adminUserSelect" onchange="loadUserDetails()">
-        <option value="">-- Choose a user --</option>
-      </select>
-      <div id="userDetails" style="margin-top:10px;"></div>
-    </div>
-  </div>
-</body>
-</html>
+    // Calculate date range
+    const now = new Date();
+    let fromDate;
+    switch (rangeKey) {
+      case 'currentWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay())); break;
+      case 'lastWeek': fromDate = new Date(now.setDate(now.getDate() - now.getDay() - 7)); break;
+      case 'lastMonth': fromDate = new Date(now.getFullYear(), now.getMonth() - 1, 1); break;
+      default: fromDate = new Date(now.getFullYear(), now.getMonth(), 1); // currentMonth
+    }
+
+    // Calculate totals
+    const totals = {};
+    for (let row of logsData) {
+      const logDate = new Date(row[0]);
+      if (logDate < fromDate) continue;
+      
+      const user = userMap[row[1]];
+      if (!user) continue;
+
+      totals[user] = (totals[user] || 0) + row[5];
+    }
+
+    return Object.entries(totals).map(([username, total]) => ({ username, total }));
+  } catch (e) {
+    console.error("Error in getAllUserContributionTotals:", e);
+    return [];
+  }
+}
+
+function getAllUsernames() {
+  try {
+    const data = checkSheetExists('Users').getDataRange().getValues();
+    return data.map(row => row[0]).filter(name => name && name !== 'Username');
+  } catch (e) {
+    console.error("Error in getAllUsernames:", e);
+    return [];
+  }
+}
