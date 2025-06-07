@@ -82,48 +82,43 @@ function getUserKingdoms(username) {
 var predefinedLands = [140578, 140322, 140066, 140320, 140064];
 
 // User contribution for their own data
-function getUserContribution(username, dateRange) {
-  var dates = getDateRange(dateRange);
-  if (!dates) {
-    return { error: 'Invalid date range selected.' };
-  }
-  var from = dates.from;
-  var to = dates.to;
+function getUserContribution(username, range) {
+  const ss = SpreadsheetApp.getActive();
+  const userSheet = ss.getSheetByName('Users');
+  const users = userSheet.getDataRange().getValues();
+  
+  const userRow = users.find(row => row[0].toLowerCase() === username.toLowerCase());
+  if (!userRow) return [];
 
-  var kingdoms = getUserKingdoms(username);
-  if (kingdoms.length === 0) {
-    return { contribution: [], message: 'No kingdoms linked to this user.' };
-  }
+  const wallet = userRow[1].toLowerCase();
+  const kingdomIds = userRow[2] ? userRow[2].split(',').map(k => k.trim()) : [];
+  const { from, to } = getDateRange(range);
 
-  var combinedContributions = {};
+  const allContributions = [];
 
-  predefinedLands.forEach(function(landId) {
-    var apiUrl = "https://api-lok-live.leagueofkingdoms.com/api/stat/land/contribution?landId=" + landId + "&from=" + from + "&to=" + to;
+  kingdomIds.forEach(kingdomId => {
     try {
-      var response = UrlFetchApp.fetch(apiUrl, {muteHttpExceptions: true});
-      if (response.getResponseCode() !== 200) return;
-      var jsonData = JSON.parse(response.getContentText());
-      if (!jsonData.contribution) return;
+      const url = `https://api-lok-live.leagueofkingdoms.com/api/stat/land/contribution?landId=${kingdomId}&from=${from}&to=${to}`;
+      const response = UrlFetchApp.fetch(url);
+      const data = JSON.parse(response.getContentText()).data;
 
-      jsonData.contribution.forEach(function(item) {
-        if (kingdoms.includes(item.kingdomId.toString())) {
-          if (!combinedContributions[item.kingdomId]) {
-            combinedContributions[item.kingdomId] = {
-              kingdomId: item.kingdomId,
-              name: item.name,
-              continent: item.continent,
-              total: 0
-            };
-          }
-          combinedContributions[item.kingdomId].total += item.total;
+      data.forEach(entry => {
+        if (entry.wallet?.toLowerCase() === wallet) {
+          allContributions.push({
+            kingdomId: kingdomId,
+            name: entry.name || '',
+            continent: entry.continent || '',
+            total: entry.total || 0
+          });
         }
       });
-    } catch(e) {
-      Logger.log("Error fetching land " + landId + ": " + e.toString());
+
+    } catch (err) {
+      Logger.log(`Error fetching for kingdom ${kingdomId}: ${err}`);
     }
   });
 
-  return { contribution: Object.values(combinedContributions) };
+  return allContributions;
 }
 
 // Admin-level fetch for all users
@@ -187,45 +182,34 @@ function getAllUsersContribution(dateRange) {
 }
 
 // Date range helper
+
 function getDateRange(range) {
-  var today = new Date();
-  today.setHours(0,0,0,0);
-  var from, to;
+  const now = new Date();
+  let from = new Date();
+  let to = new Date();
 
-  switch(range) {
-    case 'currentWeek':
-      var day = today.getDay();
-      from = new Date(today);
-      from.setDate(today.getDate() - day + 1);
-      to = new Date(from);
+  switch (range) {
+    case "lastWeek":
+      from.setDate(now.getDate() - now.getDay() - 7);
       to.setDate(from.getDate() + 6);
       break;
-
-    case 'lastWeek':
-      var day = today.getDay();
-      from = new Date(today);
-      from.setDate(today.getDate() - day - 6);
-      to = new Date(from);
+    case "currentWeek":
+      from.setDate(now.getDate() - now.getDay());
       to.setDate(from.getDate() + 6);
       break;
-
-    case 'currentMonth':
-      from = new Date(today.getFullYear(), today.getMonth(), 1);
-      to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    case "lastMonth":
+      from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      to = new Date(now.getFullYear(), now.getMonth(), 0);
       break;
-
-    case 'lastMonth':
-      from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      to = new Date(today.getFullYear(), today.getMonth(), 0);
-      break;
-
+    case "currentMonth":
     default:
-      return null;
+      from = new Date(now.getFullYear(), now.getMonth(), 1);
+      to = now;
+      break;
   }
-  return {
-    from: formatDate(from),
-    to: formatDate(to)
-  };
+
+  const format = d => Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  return { from: format(from), to: format(to) };
 }
 
 // Format date to YYYY-MM-DD
