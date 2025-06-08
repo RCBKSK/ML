@@ -1,274 +1,355 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <base target="_top">
-    <title>C61 Land Programme</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <title>C61 Land Programme</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Variables for easy theming */
+        /* Global Styles & Variables */
         :root {
-            --primary-color: #3f51b5; /* Deeper blue */
-            --primary-dark: #303f9f;
-            --primary-light: #c5cae9; /* Lighter shade for gradients */
-            --secondary-color: #ff9800; /* Orange accent */
-            --success-color: #4caf50;
-            --error-color: #f44336;
-            --text-dark: #333;
-            --text-light: #f8f8f8;
-            --bg-light: #ffffff;
-            --border-light: #e0e0e0;
-            --shadow-light: rgba(0, 0, 0, 0.1);
-            --shadow-medium: rgba(0, 0, 0, 0.2);
-            --transition-speed: 0.3s;
+            --bg-dark: #0A0A1F; /* Deep space background */
+            --bg-medium: #1A1A3B; /* Slightly lighter for sections */
+            --bg-light: #2A2A5C; /* Even lighter for cards/elements */
+            --primary-accent: #E94560; /* Vibrant electric pink */
+            --secondary-accent: #00BCD4; /* Electric cyan */
+            --tertiary-accent: #6C5CE7; /* Deep purple */
+            --text-light: #E0E0E0; /* Bright text on dark background */
+            --text-dark: #CCCCCC; /* Subdued text */
+            --border-color: rgba(255, 255, 255, 0.1); /* Subtle white border for depth */
+            --glow-color-primary: rgba(233, 69, 96, 0.6); /* Pink glow */
+            --glow-color-secondary: rgba(0, 188, 212, 0.5); /* Cyan glow */
+            --shadow-strong: rgba(0, 0, 0, 0.8);
+            --transition-speed: 0.4s;
+            --font-family-title: 'Orbitron', sans-serif;
+            --font-family-body: 'Inter', sans-serif;
+            --success-color: #4CAF50;
+            --error-color: #F44336;
         }
 
         /* Basic Reset & Body Styling */
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: var(--font-family-body);
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, var(--primary-light) 0%, #bbdefb 100%);
-            color: var(--text-dark);
+            background: linear-gradient(145deg, var(--bg-dark) 0%, #050510 100%);
+            color: var(--text-light);
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start; /* Align content from top */
             align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            overflow-y: auto; /* Allow scrolling for taller content */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
         }
 
         /* Main Container */
         .container {
-            max-width: 960px; /* Increased max-width */
-            width: 95%; /* Responsive width */
+            max-width: 1200px;
+            width: 95%;
             padding: 40px;
-            background-color: var(--bg-light);
-            border-radius: 18px;
-            box-shadow: 0 15px 30px var(--shadow-medium);
-            backdrop-filter: blur(10px);
+            background-color: var(--bg-medium);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px var(--shadow-strong);
+            margin: 30px 0;
             box-sizing: border-box;
-            animation: fadeIn var(--transition-speed) ease-out;
-            margin: 20px 0; /* Add vertical margin for spacing on small screens */
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+            overflow: hidden; /* For inner glow effects */
         }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-accent), var(--secondary-accent), var(--tertiary-accent));
+            background-size: 400% 400%;
+            border-radius: 22px;
+            z-index: -1;
+            filter: blur(15px);
+            opacity: 0.15;
+            animation: glowing-border 10s infinite alternate;
+        }
+        @keyframes glowing-border {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
 
         /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
+            from { opacity: 0; transform: translateY(-30px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         /* Headings */
         h2 {
+            font-family: var(--font-family-title);
             text-align: center;
-            color: var(--primary-color);
+            color: var(--primary-accent);
             margin-bottom: 25px;
             font-weight: 800;
-            font-size: 2.8em; /* Significantly larger */
-            text-shadow: 1px 2px 4px var(--shadow-light);
-            letter-spacing: -0.03em;
+            font-size: 3.5em; /* Larger for impact */
+            text-shadow: 0 0 20px var(--glow-color-primary), 0 0 30px var(--glow-color-secondary);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
         }
         h3 {
-            color: var(--primary-dark);
+            font-family: var(--font-family-title);
+            color: var(--secondary-accent);
             margin-top: 35px;
             margin-bottom: 20px;
             text-align: center;
             font-weight: 700;
-            font-size: 1.8em;
+            font-size: 2em;
+            text-shadow: 0 0 10px rgba(0, 188, 212, 0.4);
+            letter-spacing: 0.03em;
         }
         .initial-subtitle {
             text-align: center;
-            font-size: 0.9em;
+            font-size: 1.2em;
             color: var(--text-dark);
             margin-top: -15px;
             margin-bottom: 40px;
             font-weight: 400;
+            line-height: 1.5;
         }
         .initial-subtitle strong {
-            color: var(--primary-color);
+            color: var(--primary-accent);
             font-weight: 700;
         }
 
         /* Section Display */
         .section {
             display: none;
+            animation: slideIn 0.6s ease-out forwards;
+            padding: 20px 0;
         }
 
         /* Form Elements */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .form-group label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-weight: 600;
-            color: var(--text-dark);
-            font-size: 1.05em;
+            color: var(--text-light);
+            font-size: 1.1em;
         }
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group select {
-            padding: 14px 18px;
-            border: 2px solid var(--border-light);
-            border-radius: 10px;
+            padding: 16px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
             box-sizing: border-box;
-            width: 100%; /* Full width within its parent */
-            max-width: 450px; /* Constrain width for desktop */
-            font-size: 1em;
-            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
-            background-color: #fcfcfc;
+            width: 100%;
+            max-width: 500px; /* Slightly wider forms */
+            font-size: 1.1em;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 10px rgba(63, 81, 181, 0.2);
-            background-color: var(--bg-light);
+            border-color: var(--secondary-accent);
+            box-shadow: 0 0 20px var(--glow-color-secondary), inset 0 0 8px rgba(0, 188, 212, 0.3);
+            background-color: #0F1A2A;
         }
         #kingdomInputsContainer {
-            border: 1px dashed var(--border-light);
-            padding: 15px;
-            border-radius: 10px;
-            background-color: #fcfcfc;
-            margin-top: 10px;
-            box-shadow: inset 0 1px 3px var(--shadow-light);
+            border: 1px dashed rgba(255, 255, 255, 0.08);
+            padding: 20px;
+            border-radius: 15px;
+            background-color: rgba(0,0,0,0.15);
+            margin-top: 15px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
         }
         #kingdomInputsContainer input {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         /* Buttons */
         .button-group {
             text-align: center;
-            margin-top: 35px;
+            margin-top: 40px;
             display: flex;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 15px; /* Spacing between buttons */
+            gap: 20px;
         }
         .button-group button,
         .add-kingdom-btn,
         .nav-btn,
-        .action-button {
-            padding: 14px 30px;
+        .action-button,
+        .modal-button {
+            padding: 15px 35px;
             border: none;
-            border-radius: 10px;
-            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            border-radius: 12px;
+            background: linear-gradient(45deg, var(--primary-accent), var(--tertiary-accent));
             color: var(--text-light);
             cursor: pointer;
             transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease, background var(--transition-speed) ease;
-            font-weight: 600;
-            box-shadow: 0 5px 15px var(--shadow-medium);
-            font-size: 1.05em;
-            white-space: nowrap; /* Prevent text wrapping inside button */
+            font-weight: 700;
+            box-shadow: 0 8px 20px var(--shadow-strong);
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            position: relative;
+            overflow: hidden;
+        }
+        .button-group button::before,
+        .add-kingdom-btn::before,
+        .nav-btn::before,
+        .action-button::before,
+        .modal-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            z-index: 0;
+        }
+        .button-group button:hover::before,
+        .add-kingdom-btn:hover::before,
+        .nav-btn:hover::before,
+        .action-button:hover::before,
+        .modal-button:hover::before {
+            width: 0%;
+            height: 0%;
+            opacity: 1;
         }
         .button-group button:hover,
         .add-kingdom-btn:hover,
         .nav-btn:hover,
-        .action-button:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px var(--shadow-medium);
-            background: linear-gradient(to right, var(--primary-dark), var(--primary-color));
+        .action-button:hover,
+        .modal-button:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 25px var(--shadow-strong), 0 0 25px var(--glow-color-primary);
+            background: linear-gradient(45deg, var(--tertiary-accent), var(--primary-accent));
         }
 
         .add-kingdom-btn {
-            background: linear-gradient(to right, var(--success-color), #388e3c);
-            padding: 10px 20px;
-            font-size: 0.95em;
-            margin-top: 15px;
-            display: inline-block;
+            background: linear-gradient(45deg, var(--success-color), #2E7D32);
+            padding: 12px 25px;
+            font-size: 1em;
+            margin-top: 20px;
         }
         .add-kingdom-btn:hover {
-            background: linear-gradient(to right, #388e3c, var(--success-color));
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6), 0 0 15px rgba(76, 175, 80, 0.5);
+            background: linear-gradient(45deg, #2E7D32, var(--success-color));
         }
         .action-button.delete-btn {
-            background: linear-gradient(to right, var(--error-color), #d32f2f);
-            padding: 8px 15px;
-            font-size: 0.85em;
+            background: linear-gradient(45deg, var(--error-color), #B71C1C);
+            padding: 10px 20px;
+            font-size: 0.9em;
             margin: 5px;
         }
         .action-button.delete-btn:hover {
-            background: linear-gradient(to right, #d32f2f, var(--error-color));
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5), 0 0 10px rgba(244, 67, 54, 0.5);
+            background: linear-gradient(45deg, #B71C1C, var(--error-color));
         }
 
         /* Navigation Bar */
         .nav-bar {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
-            flex-wrap: wrap; /* Allow nav buttons to wrap */
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 10px; /* Space between nav buttons */
+            gap: 15px;
         }
         .nav-bar button {
             background: var(--bg-light);
-            color: var(--primary-color);
-            border: 1px solid var(--primary-light);
-            box-shadow: 0 2px 5px var(--shadow-light);
-            padding: 10px 20px;
-            font-size: 0.9em;
+            color: var(--secondary-accent);
+            border: 1px solid rgba(0, 188, 212, 0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            padding: 12px 25px;
+            font-size: 1em;
         }
         .nav-bar button.active {
-            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            background: linear-gradient(90deg, var(--secondary-accent), var(--tertiary-accent));
             color: var(--text-light);
             border: none;
-            box-shadow: 0 4px 10px var(--shadow-medium);
+            box-shadow: 0 6px 15px var(--glow-color-secondary), 0 0 10px var(--glow-color-secondary);
+            transform: translateY(-3px);
         }
+        .nav-bar button.active:hover {
+             transform: translateY(-3px); /* Prevent extra lift on active hover */
+        }
+
 
         /* Messages (Success/Error/Loading) */
         .message {
-            margin-top: 20px;
+            margin-top: 25px;
             text-align: center;
             font-weight: 600;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 18px;
+            border-radius: 12px;
             transition: all var(--transition-speed) ease-in-out;
-            opacity: 0; /* Hidden by default, JS handles opacity */
+            opacity: 0;
             visibility: hidden;
             max-height: 0;
             overflow: hidden;
-            display: flex; /* Use flex for centering spinner */
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            font-size: 1em;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
         .message.show {
             opacity: 1;
             visibility: visible;
-            max-height: 100px; /* Allow content */
-            margin-bottom: 20px;
+            max-height: 100px; /* Adjust as needed */
+            margin-bottom: 25px;
         }
         .error-message {
             color: var(--error-color);
-            background-color: rgba(244, 67, 54, 0.1);
+            background-color: rgba(244, 67, 54, 0.15);
             border: 1px solid var(--error-color);
         }
         .success-message {
             color: var(--success-color);
-            background-color: rgba(76, 175, 80, 0.1);
+            background-color: rgba(76, 175, 80, 0.15);
             border: 1px solid var(--success-color);
         }
         .loading-message {
-            color: var(--primary-color);
-            background-color: rgba(63, 81, 181, 0.08);
-            border: 1px solid var(--primary-light);
+            color: var(--secondary-accent);
+            background-color: rgba(0, 188, 212, 0.1);
+            border: 1px solid var(--secondary-accent);
         }
         /* Spinner CSS */
         .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
+            border: 4px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            border-top: 4px solid var(--primary-dark);
-            width: 20px;
-            height: 20px;
+            border-top: 4px solid var(--primary-accent);
+            width: 25px;
+            height: 25px;
             animation: spin 1s linear infinite;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .loading-message .spinner {
-            display: block; /* Show when loading */
+            display: block;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -277,83 +358,169 @@
 
         /* Tables */
         .table-container {
-            max-height: 450px; /* Slightly taller for desktop */
+            max-height: 550px; /* Taller tables for more data */
             overflow-y: auto;
-            border: 2px solid var(--border-light);
-            border-radius: 12px;
-            box-shadow: inset 0 2px 10px var(--shadow-light);
-            margin-top: 25px;
-            background-color: var(--bg-light);
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.6);
+            margin-top: 30px;
+            background-color: rgba(0,0,0,0.2); /* Semi-transparent for background visibility */
+            padding: 1px; /* To prevent border-radius clipping */
         }
         table {
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95em;
+            border-collapse: separate; /* For rounded corners on cells */
+            border-spacing: 0;
+            font-size: 0.98em;
+            background-color: var(--bg-medium);
+            border-radius: 15px;
+            overflow: hidden; /* Hide anything outside rounded borders */
         }
         table th, table td {
-            border: 1px solid #f0f0f0;
-            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.08); /* Vertical borders */
+            padding: 16px 20px;
             text-align: left;
-            word-break: break-word; /* Ensure long content wraps */
+            word-break: break-word;
+        }
+        table th:last-child, table td:last-child {
+            border-right: none; /* No border on last column */
+        }
+        table tr:last-child td {
+            border-bottom: none; /* No border on last row */
         }
         table th {
-            background-color: #e8eaf6; /* Light blue header */
+            background-color: rgba(0, 188, 212, 0.2); /* Cyan header bg */
             font-weight: 700;
-            color: var(--primary-dark);
+            color: var(--secondary-accent);
             position: sticky;
             top: 0;
-            z-index: 2; /* Ensure header is above rows when scrolling */
-            cursor: pointer; /* Indicate sortable */
-            user-select: none; /* Prevent text selection on click */
+            z-index: 2;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
         }
-        table th.asc::after { content: ' \25B2'; } /* Up arrow */
-        table th.desc::after { content: ' \25BC'; } /* Down arrow */
+        table th:hover {
+            background-color: rgba(0, 188, 212, 0.3);
+            box-shadow: inset 0 0 10px rgba(0, 188, 212, 0.2);
+        }
+        table th.asc::after { content: ' \25B2'; color: var(--primary-accent); }
+        table th.desc::after { content: ' \25BC'; color: var(--primary-accent); }
 
         table tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: rgba(0,0,0,0.1); /* Subtle stripe */
         }
         table tbody tr:hover {
-            background-color: #eef1f9;
+            background-color: rgba(0, 188, 212, 0.1);
             transition: background-color 0.2s ease;
         }
         .total-row {
             font-weight: 700;
-            background-color: #e3f2fd;
-            color: var(--primary-dark);
+            background-color: rgba(233, 69, 96, 0.15); /* Pink accent for total */
+            color: var(--primary-accent);
             font-size: 1.1em;
             position: sticky;
             bottom: 0;
-            z-index: 1; /* Ensure total row is above normal rows when scrolling */
+            z-index: 1;
         }
         p strong {
-            color: var(--primary-color);
+            color: var(--primary-accent);
         }
         #userOverallTotal, #adminOverallTotal, #topContributorsOverallTotal {
-            color: var(--secondary-color); /* Highlight total numbers */
-            font-size: 1.2em;
+            color: var(--secondary-accent);
+            font-size: 1.3em;
+            text-shadow: 0 0 8px rgba(0, 188, 212, 0.6);
         }
 
         /* Search/Filter Inputs */
         .filter-group {
-            margin-top: 20px;
-            margin-bottom: 15px;
+            margin-top: 25px;
+            margin-bottom: 20px;
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
             flex-wrap: wrap;
+            justify-content: center;
         }
         .filter-group label {
             margin-bottom: 0;
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 1.05em;
+            white-space: nowrap;
         }
         .filter-group input {
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-light);
-            max-width: 300px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            max-width: 350px;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-size: 1em;
         }
         .filter-group input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 5px rgba(63, 81, 181, 0.1);
+            border-color: var(--secondary-accent);
+            box-shadow: 0 0 10px var(--glow-color-secondary);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.85); /* Darker overlay */
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background-color: var(--bg-medium);
+            margin: auto;
+            padding: 40px;
+            border: 2px solid var(--primary-accent);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px var(--glow-color-primary);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            animation: scaleIn 0.4s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-content h3 {
+            color: var(--primary-accent);
+            font-family: var(--font-family-title);
+            margin-top: 0;
+            font-size: 1.8em;
+            text-shadow: 0 0 10px var(--glow-color-primary);
+        }
+
+        .modal-content p {
+            margin: 25px 0;
+            color: var(--text-light);
+            font-size: 1.15em;
+            line-height: 1.4;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
         }
 
         /* Responsive Adjustments */
@@ -362,113 +529,162 @@
                 padding: 25px;
                 width: 98%;
                 margin: 15px 0;
+                border-radius: 15px;
+            }
+            .container::before {
+                border-radius: 17px;
             }
             h2 {
-                font-size: 2.2em;
+                font-size: 2.5em;
                 margin-bottom: 20px;
             }
             h3 {
-                font-size: 1.5em;
+                font-size: 1.6em;
                 margin-top: 25px;
                 margin-bottom: 15px;
             }
             .initial-subtitle {
-                font-size: 0.8em;
-                margin-bottom: 25px;
+                font-size: 1em;
+                margin-bottom: 30px;
             }
             .form-group input, .form-group select {
-                max-width: none; /* Occupy full width */
+                max-width: none;
+                padding: 14px 16px;
+                font-size: 1em;
+                border-radius: 10px;
             }
-            .button-group button, .add-kingdom-btn, .nav-btn, .action-button {
-                padding: 12px 20px;
-                font-size: 0.95em;
-                width: auto; /* Allow buttons to size naturally */
-                flex-grow: 1; /* Make them grow if space allows */
-                margin: 5px; /* Adjust margin for wrapped buttons */
+            .button-group button, .add-kingdom-btn, .nav-btn, .action-button, .modal-button {
+                padding: 12px 25px;
+                font-size: 1em;
+                flex-grow: 1;
+                margin: 5px;
+                border-radius: 10px;
             }
             .button-group {
                 gap: 10px;
             }
             .nav-bar {
-                flex-direction: column; /* Stack nav buttons vertically */
-                gap: 8px;
+                flex-direction: column;
+                gap: 10px;
             }
             .table-container {
-                overflow-x: auto; /* Enable horizontal scroll for tables */
-                -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border-radius: 10px;
             }
             table {
-                min-width: 600px; /* Ensure table doesn't shrink too much */
+                min-width: 700px; /* Ensure table doesn't collapse too much */
+                border-radius: 10px;
             }
             table th, table td {
-                padding: 10px 12px;
-                font-size: 0.9em;
+                padding: 12px 15px;
+                font-size: 0.95em;
             }
             .message {
-                padding: 12px;
-                font-size: 0.9em;
+                padding: 15px;
+                font-size: 0.95em;
+                border-radius: 10px;
             }
             .filter-group {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: center;
+                gap: 10px;
             }
             .filter-group input {
                 max-width: none;
+            }
+            .modal-content {
+                width: 95%;
+                padding: 30px;
+                border-radius: 15px;
+            }
+            .modal-content h3 {
+                font-size: 1.6em;
+            }
+            .modal-content p {
+                font-size: 1.05em;
+            }
+            .modal-buttons {
+                gap: 15px;
             }
         }
 
         @media (max-width: 480px) {
             .container {
                 padding: 15px;
-                border-radius: 12px;
+                border-radius: 10px;
                 margin: 10px 0;
             }
+            .container::before {
+                border-radius: 12px;
+            }
             h2 {
-                font-size: 1.8em;
+                font-size: 2em;
+                margin-bottom: 15px;
             }
             h3 {
-                font-size: 1.3em;
+                font-size: 1.4em;
+                margin-top: 20px;
+                margin-bottom: 10px;
             }
             .initial-subtitle {
-                font-size: 0.75em;
+                font-size: 0.9em;
+                margin-bottom: 20px;
             }
-            .button-group button, .add-kingdom-btn, .nav-btn, .action-button {
-                padding: 10px 15px;
-                font-size: 0.85em;
+            .button-group button, .add-kingdom-btn, .nav-btn, .action-button, .modal-button {
+                padding: 10px 20px;
+                font-size: 0.9em;
                 flex-grow: 1;
                 margin: 4px;
+                border-radius: 8px;
             }
             .nav-bar button {
-                font-size: 0.8em;
-            }
-            table th, table td {
-                padding: 8px 10px;
                 font-size: 0.85em;
             }
+            table th, table td {
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
             .action-button.delete-btn {
-                padding: 6px 10px;
-                font-size: 0.75em;
+                padding: 8px 15px;
+                font-size: 0.8em;
+            }
+            .modal-content {
+                padding: 20px;
+                border-radius: 12px;
+            }
+            .modal-content h3 {
+                font-size: 1.4em;
+            }
+            .modal-content p {
+                font-size: 0.95em;
+                margin: 15px 0;
+            }
+            .modal-buttons {
+                gap: 10px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Initial Landing Page -->
         <div id="initialPage" class="section">
             <h2>C61 Land Programme</h2>
-            <p class="initial-subtitle">developed by <strong>RCBK.Dev</strong></p>
+            <p class="initial-subtitle">developed by <strong>RCBK.Dev</strong> - Your gateway to efficient League of Kingdoms land contribution tracking.</p>
             <div class="button-group">
                 <button onclick="showSection('loginSection')">Login</button>
                 <button onclick="showSection('registerSection')">Register</button>
             </div>
         </div>
 
+        <!-- Login Section -->
         <div id="loginSection" class="section">
-            <h2>Login</h2>
+            <h2>Login to Your Account</h2>
             <form onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="loginUsername">Username:</label>
-                    <input type="text" id="loginUsername" required>
+                    <input type="text" id="loginUsername" required autocomplete="username">
                 </div>
                 <div class="button-group">
                     <button type="submit">Login</button>
@@ -478,16 +694,17 @@
             </form>
         </div>
 
+        <!-- Register Section -->
         <div id="registerSection" class="section">
-            <h2>Register</h2>
+            <h2>Register New User</h2>
             <form onsubmit="handleRegister(event)">
                 <div class="form-group">
                     <label for="regUsername">Username:</label>
-                    <input type="text" id="regUsername" required>
+                    <input type="text" id="regUsername" required autocomplete="new-username">
                 </div>
                 <div class="form-group">
                     <label for="regWalletAddress">Wallet Address:</label>
-                    <input type="text" id="regWalletAddress" required>
+                    <input type="text" id="regWalletAddress" required autocomplete="off" placeholder="e.g., 0xabcdef1234567890abcdef1234567890abcdef">
                 </div>
                 <div class="form-group">
                     <label>Kingdom IDs:</label>
@@ -504,15 +721,18 @@
             </form>
         </div>
 
+        <!-- User Dashboard Section -->
         <div id="userDashboardSection" class="section">
             <h2 id="welcomeUser">Welcome, User!</h2>
             <div class="nav-bar">
                 <button class="nav-btn active" onclick="showUserContributions()">My Contributions</button>
                 <button class="nav-btn" onclick="showManageKingdoms()">Manage Kingdoms</button>
+                <button class="nav-btn" onclick="showUserTopContributors()">Top Contributors</button> <!-- New button for users -->
                 <button class="nav-btn" onclick="showAdminDashboard()">Admin Dashboard</button>
                 <button class="nav-btn" onclick="logout()">Logout</button>
             </div>
 
+            <!-- User Contributions Sub-section -->
             <div id="userContributionsSubSection">
                 <h3>My Land Contributions</h3>
                 <div class="form-group">
@@ -548,6 +768,7 @@
                  <p id="userContributionMessage" class="message"><span class="spinner"></span></p>
             </div>
 
+            <!-- Manage Kingdoms Sub-section -->
             <div id="manageKingdomsSubSection" style="display: none;">
                 <h3>Manage Your Kingdom IDs</h3>
                 <div class="form-group">
@@ -573,8 +794,39 @@
                     <button type="button" onclick="showUserContributions()">Back to Contributions</button>
                 </div>
             </div>
+
+            <!-- Top Contributors Sub-section for Users -->
+            <div id="userTopContributorsSubSection" style="display: none;">
+                <h3>Top Contributors (Overall)</h3>
+                <div class="form-group">
+                    <label for="userTopContributorPeriod">Select Period:</label>
+                    <select id="userTopContributorPeriod" onchange="getUserTopContributorsData()">
+                        <option value="currentWeek">Current Week</option>
+                        <option value="lastWeek">Last Week</option>
+                        <option value="currentMonth">Current Month</option>
+                        <option value="lastMonth">Last Month</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table id="userTopContributorsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('userTopContributorsTable', 0)">Rank</th>
+                                <th onclick="sortTable('userTopContributorsTable', 1)">Username</th>
+                                <th onclick="sortTable('userTopContributorsTable', 2)">Total Contribution</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan='3'>Loading top contributors...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="text-align: right; font-weight: bold; margin-top: 15px;">Period Total: <span id="userTopContributorsOverallTotal">0</span></p>
+                <p id="userTopContributorsMessage" class="message"><span class="spinner"></span></p>
+            </div>
         </div>
 
+        <!-- Admin Dashboard Section -->
         <div id="adminDashboardSection" class="section">
             <h2>Admin Dashboard</h2>
             <div class="nav-bar">
@@ -586,7 +838,7 @@
             <h3>All Registered Users</h3>
             <div class="filter-group">
                 <label for="userSearch">Search Users:</label>
-                <input type="text" id="userSearch" onkeyup="filterTable('adminUsersTable', 'userSearch')">
+                <input type="text" id="userSearch" onkeyup="filterTable('adminUsersTable', 'userSearch')" placeholder="Search by username">
             </div>
             <div class="table-container">
                 <table id="adminUsersTable">
@@ -666,6 +918,18 @@
         </div>
     </div>
 
+    <!-- Custom Modal for Confirmations/Alerts -->
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirmation</h3>
+            <p id="modalMessage">Are you sure?</p>
+            <div class="modal-buttons">
+                <button id="modalConfirmBtn" class="modal-button">Confirm</button>
+                <button id="modalCancelBtn" class="modal-button cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Global state
         let currentUser = null; // Stores logged-in user data
@@ -710,6 +974,59 @@
             setTimeout(() => element.textContent = '', 300);
         }
 
+        // Custom Modal Function (replaces alert/confirm)
+        function showCustomModal(title, message, isConfirm = false) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('customModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalMessage = document.getElementById('modalMessage');
+                const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+                const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+
+                if (isConfirm) {
+                    modalConfirmBtn.style.display = 'inline-block';
+                    modalCancelBtn.style.display = 'inline-block';
+                } else {
+                    modalConfirmBtn.style.display = 'none';
+                    modalCancelBtn.style.display = 'none'; // For simple alerts, only close
+                }
+
+                modal.style.display = 'flex'; // Show modal
+
+                const handleConfirm = () => {
+                    modal.style.display = 'none';
+                    modalConfirmBtn.removeEventListener('click', handleConfirm);
+                    modalCancelBtn.removeEventListener('click', handleCancel);
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    modal.style.display = 'none';
+                    modalConfirmBtn.removeEventListener('click', handleConfirm);
+                    modalCancelBtn.removeEventListener('click', handleCancel);
+                    resolve(false);
+                };
+
+                modalConfirmBtn.addEventListener('click', handleConfirm);
+                modalCancelBtn.addEventListener('click', handleCancel);
+
+                // Allow clicking outside to close for alerts, but not confirms
+                if (!isConfirm) {
+                    modal.addEventListener('click', function dismissModal(event) {
+                        if (event.target === modal) {
+                            modal.style.display = 'none';
+                            modal.removeEventListener('click', dismissModal);
+                            resolve(false); // Resolve false if alert is dismissed by clicking outside
+                        }
+                    });
+                }
+            });
+        }
+
+
         document.addEventListener('DOMContentLoaded', (event) => {
             showSection('initialPage');
         });
@@ -718,8 +1035,14 @@
             const sections = document.querySelectorAll('.section');
             sections.forEach(section => {
                 section.style.display = 'none';
+                section.style.animation = 'none'; // Reset animation
             });
-            document.getElementById(sectionId).style.display = 'block';
+            const activeSection = document.getElementById(sectionId);
+            if (activeSection) {
+                activeSection.style.display = 'block';
+                activeSection.style.animation = 'slideIn 0.6s ease-out forwards'; // Apply animation
+            }
+
 
             // Clear all messages when changing sections
             document.querySelectorAll('.message').forEach(msgElement => {
@@ -739,6 +1062,7 @@
                 document.querySelector('#userDashboardSection .nav-btn:nth-child(1)').classList.add('active');
                 document.getElementById('userContributionsSubSection').style.display = 'block';
                 document.getElementById('manageKingdomsSubSection').style.display = 'none'; // Hide manage kingdoms
+                document.getElementById('userTopContributorsSubSection').style.display = 'none'; // Hide user top contributors
                 getUserContributions(); // Load user contributions on dashboard entry
             } else if (sectionId === 'adminDashboardSection') {
                  document.querySelector('#adminDashboardSection .nav-btn:nth-child(2)').classList.add('active');
@@ -749,14 +1073,23 @@
         }
 
         function showUserContributions() {
-            showSection('userDashboardSection'); // This will default to contributions sub-section
-            document.querySelector('#userDashboardSection .nav-btn:nth-child(1)').classList.add('active'); // Activate 'My Contributions' button
+            // Hide other user sub-sections
+            document.getElementById('manageKingdomsSubSection').style.display = 'none';
+            document.getElementById('userTopContributorsSubSection').style.display = 'none';
+            // Show 'My Contributions'
+            document.getElementById('userContributionsSubSection').style.display = 'block';
+            // Update active nav button
+            document.querySelectorAll('#userDashboardSection .nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('#userDashboardSection .nav-btn:nth-child(1)').classList.add('active');
             getUserContributions(); // Load contributions
         }
 
         // Function to show Manage Kingdoms section
         function showManageKingdoms() {
+            // Hide other user sub-sections
             document.getElementById('userContributionsSubSection').style.display = 'none';
+            document.getElementById('userTopContributorsSubSection').style.display = 'none';
+            // Show 'Manage Kingdoms'
             document.getElementById('manageKingdomsSubSection').style.display = 'block';
             // Update active nav button
             document.querySelectorAll('#userDashboardSection .nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -764,20 +1097,33 @@
             loadUserKingdoms(); // Load kingdoms when showing this section
         }
 
-        function showAdminDashboard() {
+        // Function to show User Top Contributors section
+        function showUserTopContributors() {
+            // Hide other user sub-sections
+            document.getElementById('userContributionsSubSection').style.display = 'none';
+            document.getElementById('manageKingdomsSubSection').style.display = 'none';
+            // Show 'Top Contributors'
+            document.getElementById('userTopContributorsSubSection').style.display = 'block';
+            // Update active nav button
+            document.querySelectorAll('#userDashboardSection .nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('#userDashboardSection .nav-btn:nth-child(3)').classList.add('active'); // Third button is Top Contributors
+            getUserTopContributorsData(); // Load data for user top contributors
+        }
+
+        async function showAdminDashboard() {
             // Check if current user's username is in the ADMIN_USERNAMES array
             if (currentUser && ADMIN_USERNAMES.map(name => name.toLowerCase()).includes(currentUser.username.toLowerCase())) {
                 showSection('adminDashboardSection');
                 // The showSection will call getAdminUsers(), getAdminContributions(), getTopContributorsData()
             } else {
-                alert("You do not have administrative privileges to access this section.");
+                await showCustomModal("Access Denied", "You do not have administrative privileges to access this section.", false);
                 showSection('initialPage'); // Or stay on current page
             }
         }
 
-        function logout() {
+        async function logout() {
             currentUser = null;
-            alert("Logged out successfully!");
+            await showCustomModal("Logged Out", "Logged out successfully!", false);
             showSection('initialPage');
         }
 
@@ -852,7 +1198,8 @@
                     if (response.success) {
                         currentUser = response.user;
                         document.getElementById('welcomeUser').textContent = `Welcome, ${currentUser.username}!`;
-                        showUserContributions(); // Direct user to their dashboard
+                        // *** CRITICAL FIX HERE: Use showSection to ensure the main dashboard is visible ***
+                        showSection('userDashboardSection'); // This will also trigger getUserContributions()
                         setMessage('loginMessage', '', 'success'); // Clear message
                         document.getElementById('loginUsername').value = ''; // Clear input
                     } else {
@@ -970,7 +1317,7 @@
             setMessage('manageKingdomsMessage', '', 'success'); // Clear any previous message
         }
 
-        // Add a new kingdom ID to the user's account
+        // Add a new kingdom ID to a user's account
         function addNewKingdom() {
             if (!currentUser) return;
             const newKid = document.getElementById('newKingdomId').value.trim();
@@ -1002,9 +1349,10 @@
         }
 
         // Delete a kingdom ID from the user's account with confirmation
-        function deleteKingdom(kingdomId) {
+        async function deleteKingdom(kingdomId) {
             if (!currentUser) return;
-            if (confirm(`Are you sure you want to delete Kingdom ID: ${kingdomId}? This action cannot be undone.`)) {
+            const confirmed = await showCustomModal("Confirm Deletion", `Are you sure you want to delete Kingdom ID: ${kingdomId}? This action cannot be undone.`, true);
+            if (confirmed) {
                 showLoading('manageKingdomsMessage', 'Deleting kingdom...'); // Show loading indicator
                 google.script.run
                     .withSuccessHandler(function(response) {
@@ -1120,7 +1468,7 @@
             google.script.run
                 .withSuccessHandler(function(response) {
                     hideLoading('topContributorsMessage');
-                    displayTopContributors(response.data, response.from, response.to);
+                    displayTopContributors(response.data, response.from, response.to, 'topContributorsTable', 'topContributorsOverallTotal');
                 })
                 .withFailureHandler(function(error) {
                     hideLoading('topContributorsMessage');
@@ -1132,8 +1480,31 @@
                 .getTopContributors(period);
         }
 
-        function displayTopContributors(data, fromDate, toDate) {
-            const tableBody = document.querySelector("#topContributorsTable tbody");
+        function getUserTopContributorsData() { // New function for user's top contributors
+            const period = document.getElementById('userTopContributorPeriod').value;
+            const tableBody = document.querySelector("#userTopContributorsTable tbody");
+            tableBody.innerHTML = "<tr><td colspan='3'>Loading top contributors...</td></tr>";
+            document.getElementById('userTopContributorsOverallTotal').textContent = 'Calculating...';
+            showLoading('userTopContributorsMessage', 'Fetching top contributors...');
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    hideLoading('userTopContributorsMessage');
+                    displayTopContributors(response.data, response.from, response.to, 'userTopContributorsTable', 'userTopContributorsOverallTotal');
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('userTopContributorsMessage');
+                    tableBody.innerHTML = `<tr><td colspan='3' class="message error-message">Error fetching top contributors: ${error.message}</td></tr>`;
+                    document.getElementById('userTopContributorsOverallTotal').textContent = 'Error';
+                    setMessage('userTopContributorsMessage', "Error fetching top contributors: " + error.message, 'error');
+                    console.error("Error fetching user top contributors:", error);
+                })
+                .getTopContributors(period); // Re-using the same backend function
+        }
+
+
+        function displayTopContributors(data, fromDate, toDate, tableId, totalId) {
+            const tableBody = document.querySelector(`#${tableId} tbody`);
             tableBody.innerHTML = "";
             let periodTotal = 0;
 
@@ -1148,7 +1519,7 @@
             } else {
                 tableBody.innerHTML = "<tr><td colspan='3'>No top contributors found for this period.</td></tr>";
             }
-            document.getElementById('topContributorsOverallTotal').textContent = periodTotal.toLocaleString();
+            document.getElementById(totalId).textContent = periodTotal.toLocaleString();
         }
 
 
