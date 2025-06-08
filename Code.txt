@@ -1,0 +1,471 @@
+// Code.gs
+
+// --- CONFIGURATION ---
+// This script assumes it is bound to the Google Sheet where user data is stored.
+const USER_SHEET_NAME = 'Sheet1'; // <<< IMPORTANT: REPLACE WITH YOUR SHEET NAME (e.g., 'Sheet1', 'Users')
+// Changed ADMIN_USERNAME to ADMIN_USERNAMES (plural) to support multiple admins.
+const ADMIN_USERNAMES = ["HelenA", "RCBK.dev", "Mlands1"]; // Updated admin usernames
+
+// These are the Land IDs for which the API will be called to fetch base data.
+// The contributions will then be filtered by Kingdom ID from this fetched data.
+const ALL_LAND_IDS = [
+  "140578", "140322", "140066", "140320", "140064"
+];
+// --- DO NOT MODIFY BELOW THIS LINE ---
+
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('index');
+}
+
+/**
+ * Gets the user data sheet from the active spreadsheet.
+ * @returns {GoogleAppsScript.Spreadsheet.Sheet} The Google Sheet for user data.
+ * @throws {Error} If the specified sheet name is not found.
+ */
+function getUserDataSheet() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet(); // Automatically gets the bound spreadsheet
+  const sheet = spreadsheet.getSheetByName(USER_SHEET_NAME);
+  if (!sheet) {
+    throw new Error(`Sheet with name "${USER_SHEET_NAME}" not found in the active spreadsheet.`);
+  }
+  return sheet;
+}
+
+/**
+ * Registers a new user in the Google Sheet with duplicate checks.
+ * @param {string} username - The username for the new user.
+ * @param {string} walletAddress - The user's wallet address.
+ * @param {string[]} kingdomIds - An array of kingdom IDs.
+ * @returns {object} An object indicating success or failure.
+ */
+function registerUser(username, walletAddress, kingdomIds) {
+  try {
+    const sheet = getUserDataSheet();
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0]; // Assuming headers are in the first row
+    const existingUsers = data.slice(1); // All rows except header
+
+    const USERNAME_COL = 0; // Assuming Username is in column A (index 0)
+    const WALLET_COL = 1; // Assuming Wallet Address is in column B (index 1)
+    const KINGDOM_IDS_COL = 2; // Assuming Kingdom IDs is in column C (index 2)
+
+    // Validate if mandatory headers exist (optional but good practice)
+    if (headers[USERNAME_COL] !== 'Username' || headers[WALLET_COL] !== 'Wallet Address' || headers[KINGDOM_IDS_COL] !== 'Kingdom IDs') {
+        Logger.log("Sheet headers mismatch. Expected: Username, Wallet Address, Kingdom IDs");
+        return { success: false, message: "Sheet setup error: Column headers are incorrect. Please ensure the first row is 'Username', 'Wallet Address', 'Kingdom IDs'." };
+    }
+
+
+    // 1. Check for duplicate username
+    if (existingUsers.some(row => row[USERNAME_COL] && String(row[USERNAME_COL]).toLowerCase() === username.toLowerCase())) {
+      return { success: false, message: "Username already exists. Please choose a different one." };
+    }
+
+    // 2. Check for duplicate wallet address
+    if (existingUsers.some(row => row[WALLET_COL] && String(row[WALLET_COL]).toLowerCase() === walletAddress.toLowerCase())) {
+      return { success: false, message: "Wallet Address is already registered to another user." };
+    }
+
+    // 3. Check for duplicate kingdom IDs against ALL existing users
+    for (const newKid of kingdomIds) {
+        if (!newKid) continue; // Skip empty strings
+        for (const row of existingUsers) {
+            const existingKingdoms = String(row[KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '');
+            if (existingKingdoms.includes(newKid)) {
+                return { success: false, message: `Kingdom ID '${newKid}' is already registered to another user.` };
+            }
+        }
+    }
+
+    // If all checks pass, append new user data
+    sheet.appendRow([username, walletAddress, kingdomIds.join(',')]);
+    return { success: true, message: "User registered successfully." };
+  } catch (error) {
+    Logger.log("Error in registerUser: " + error.message);
+    return { success: false, message: "Server error during registration: " + error.message };
+  }
+}
+
+/**
+ * Logs in a user by checking their username.
+ * @param {string} username - The username to log in.
+ * @returns {object} An object indicating success/failure and user data if successful.
+ */
+function loginUser(username) {
+  // Check if the username is one of the defined admin usernames
+  if (ADMIN_USERNAMES.map(name => name.toLowerCase()).includes(username.toLowerCase())) {
+      return { success: true, user: { username: username, kingdomIds: [] } }; // Admin has no specific kingdom IDs tied to their account
+  }
+
+  try {
+    const sheet = getUserDataSheet();
+    const data = sheet.getDataRange().getValues();
+    const existingUsers = data.slice(1);
+
+    const USERNAME_COL = 0;
+    const WALLET_COL = 1;
+    const KINGDOM_IDS_COL = 2;
+
+    for (let i = 0; i < existingUsers.length; i++) { // Iterate through user rows (excluding header)
+      if (existingUsers[i][USERNAME_COL] && String(existingUsers[i][USERNAME_COL]).toLowerCase() === username.toLowerCase()) {
+        const user = {
+          username: existingUsers[i][USERNAME_COL],
+          walletAddress: existingUsers[i][WALLET_COL],
+          kingdomIds: String(existingUsers[i][KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '')
+        };
+        return { success: true, user: user };
+      }
+    }
+    return { success: false, message: "Invalid username." };
+  } catch (error) {
+    Logger.log("Error in loginUser: " + error.message);
+    return { success: false, message: "Server error during login: " + error.message };
+  }
+}
+
+/**
+ * Fetches all registered users for the admin dashboard.
+ * @returns {object[]} An array of user objects.
+ */
+function getAdminUsers() {
+  try {
+    const sheet = getUserDataSheet();
+    const data = sheet.getDataRange().getValues();
+    const users = [];
+
+    const USERNAME_COL = 0;
+    const WALLET_COL = 1;
+    const KINGDOM_IDS_COL = 2;
+
+    for (let i = 1; i < data.length; i++) { // Start from 1 to skip headers
+      users.push({
+        username: data[i][USERNAME_COL],
+        walletAddress: data[i][WALLET_COL],
+        kingdomIds: String(data[i][KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '')
+      });
+    }
+    return users;
+  } catch (error) {
+    Logger.log("Error in getAdminUsers: " + error.message);
+    throw new Error("Failed to retrieve user list: " + error.message);
+  }
+}
+
+
+/**
+ * Adds a new kingdom ID to a user's existing list of kingdoms.
+ * Performs checks for duplicate kingdom IDs across all users.
+ * @param {string} username - The username to add the kingdom to.
+ * @param {string} newKingdomId - The new kingdom ID to add.
+ * @returns {object} An object indicating success or failure.
+ */
+function addKingdomToUser(username, newKingdomId) {
+  try {
+    if (!newKingdomId) {
+      return { success: false, message: "Kingdom ID cannot be empty." };
+    }
+    newKingdomId = newKingdomId.trim();
+
+    const sheet = getUserDataSheet();
+    const data = sheet.getDataRange().getValues();
+    const USERNAME_COL = 0;
+    const KINGDOM_IDS_COL = 2;
+
+    let userRowIndex = -1; // 0-based index of the user's row in the data array
+    let existingUserKingdoms = [];
+
+    // 1. Find the user's row and their existing kingdom IDs
+    for (let i = 1; i < data.length; i++) { // Start from 1 to skip headers
+      if (data[i][USERNAME_COL] && String(data[i][USERNAME_COL]).toLowerCase() === username.toLowerCase()) {
+        userRowIndex = i; // Store 0-based index of row in 'data' array
+        existingUserKingdoms = String(data[i][KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '');
+        break;
+      }
+    }
+
+    if (userRowIndex === -1) {
+      return { success: false, message: "User not found." };
+    }
+
+    // 2. Check if the new kingdom ID is already registered to THIS user
+    if (existingUserKingdoms.includes(newKingdomId)) {
+      return { success: false, message: `Kingdom ID '${newKingdomId}' is already registered to your account.` };
+    }
+
+    // 3. Check if the new kingdom ID is already registered to ANY OTHER user
+    for (let i = 1; i < data.length; i++) {
+        if (i !== userRowIndex) { // Don't check against current user's own row
+            const otherUserKingdoms = String(data[i][KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '');
+            if (otherUserKingdoms.includes(newKingdomId)) {
+                return { success: false, message: `Kingdom ID '${newKingdomId}' is already registered to another user.` };
+            }
+        }
+    }
+
+    // 4. If all checks pass, add the new kingdom ID and update the sheet
+    existingUserKingdoms.push(newKingdomId);
+    // Use 1-based indexing for sheet.getRange(). Row index (userRowIndex + 1), Column index (KINGDOM_IDS_COL + 1)
+    sheet.getRange(userRowIndex + 1, KINGDOM_IDS_COL + 1).setValue(existingUserKingdoms.join(','));
+    return { success: true, message: "Kingdom ID added successfully." };
+  } catch (error) {
+    Logger.log("Error in addKingdomToUser: " + error.message);
+    return { success: false, message: "Server error: " + error.message };
+  }
+}
+
+/**
+ * Deletes a kingdom ID from a user's list of kingdoms.
+ * Prevents deleting the last kingdom ID.
+ * @param {string} username - The username to delete the kingdom from.
+ * @param {string} kingdomIdToDelete - The kingdom ID to delete.
+ * @returns {object} An object indicating success or failure.
+ */
+function deleteKingdomFromUser(username, kingdomIdToDelete) {
+  try {
+    if (!kingdomIdToDelete) {
+      return { success: false, message: "Kingdom ID to delete cannot be empty." };
+    }
+    kingdomIdToDelete = kingdomIdToDelete.trim();
+
+    const sheet = getUserDataSheet();
+    const data = sheet.getDataRange().getValues();
+    const USERNAME_COL = 0;
+    const KINGDOM_IDS_COL = 2;
+
+    let userRowIndex = -1; // 0-based index of the user's row in the data array
+    let existingUserKingdoms = [];
+
+    // Find the user's row and their existing kingdom IDs
+    for (let i = 1; i < data.length; i++) { // Start from 1 to skip headers
+      if (data[i][USERNAME_COL] && String(data[i][USERNAME_COL]).toLowerCase() === username.toLowerCase()) {
+        userRowIndex = i; // Store 0-based index of row in 'data' array
+        existingUserKingdoms = String(data[i][KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '');
+        break;
+      }
+    }
+
+    if (userRowIndex === -1) {
+      return { success: false, message: "User not found." };
+    }
+
+    const initialLength = existingUserKingdoms.length;
+    const filteredKingdoms = existingUserKingdoms.filter(id => id !== kingdomIdToDelete);
+
+    if (filteredKingdoms.length === initialLength) {
+      return { success: false, message: "Kingdom ID not found for your account." };
+    }
+    if (filteredKingdoms.length === 0) {
+      return { success: false, message: "Cannot delete the last Kingdom ID. A user must have at least one Kingdom ID." };
+    }
+
+    // Update the sheet
+    // Use 1-based indexing for sheet.getRange(). Row index (userRowIndex + 1), Column index (KINGDOM_IDS_COL + 1)
+    sheet.getRange(userRowIndex + 1, KINGDOM_IDS_COL + 1).setValue(filteredKingdoms.join(','));
+    return { success: true, message: "Kingdom ID deleted successfully." };
+  } catch (error) {
+    Logger.log("Error in deleteKingdomFromUser: " + error.message);
+    return { success: false, message: "Server error: " + error.message };
+  }
+}
+
+
+/**
+ * Fetches land contribution data from the League of Kingdoms API for given land IDs and period.
+ * This function **NO LONGER uses caching** to help debug the "Argument too large" error.
+ * @param {string} fromDate - Start date in YYYY-MM-DD format.
+ * @param {string} toDate - End date in YYYY-MM-DD format.
+ * @returns {object[]} An array of contribution data items.
+ */
+function getLokContributionData(fromDate, toDate) {
+  // Removed CacheService.getScriptCache() and cache.get() related code.
+  // This function will now always fetch fresh data from the LOK API.
+
+  let allContributions = [];
+  const options = { 'muteHttpExceptions': true };
+
+  ALL_LAND_IDS.forEach(landId => {
+    const apiUrl = `https://api-lok-live.leagueofkingdoms.com/api/stat/land/contribution?landId=${landId}&from=${fromDate}&to=${toDate}`;
+    try {
+      const response = UrlFetchApp.fetch(apiUrl, options);
+      const content = response.getContentText();
+      const jsonData = JSON.parse(content);
+
+      if (jsonData && jsonData.contribution) {
+        allContributions.push(...jsonData.contribution);
+      } else {
+         Logger.log(`No contribution data for landId: ${landId}, Response: ${content}`);
+      }
+    } catch (error) {
+      Logger.log(`Error fetching data for landId ${landId}: ${error.message}`);
+    }
+  });
+
+  const jsonString = JSON.stringify(allContributions);
+  Logger.log(`Raw LOK data stringified size (for return): ${jsonString.length / 1024} KB`);
+  
+  // CACHING LOGIC HAS BEEN REMOVED FOR DEBUGGING PURPOSES.
+  // It was previously here, but caused "Argument too large" error.
+  // If the error disappears, it confirms the CacheService was the issue.
+
+  return allContributions;
+}
+
+
+/**
+ * Fetches contributions for a specific user's kingdoms based on a selected period.
+ * This function now fetches ALL relevant data and filters by user's kingdom IDs.
+ * @param {string[]} userKingdomIds - Array of kingdom IDs for the current user.
+ * @param {string} period - 'currentWeek', 'lastWeek', 'currentMonth', 'lastMonth'.
+ * @returns {object} An object containing data and period dates.
+ */
+function getContributionsForUser(userKingdomIds, period) {
+  const { from, to } = calculateDates(period);
+  // Fetch all relevant data first (will now fetch fresh, as caching is removed in getLokContributionData)
+  const allRawData = getLokContributionData(from, to);
+
+  // Now, filter this data based on the user's specific kingdom IDs
+  const filteredData = allRawData.filter(item => userKingdomIds.includes(item.kingdomId));
+
+  // Add from/to dates to each item for display on client side
+  const formattedData = filteredData.map(item => ({
+      ...item,
+      from: from,
+      to: to
+  }));
+
+  return { data: formattedData, from: from, to: to };
+}
+
+/**
+ * Fetches contributions for all registered users for the admin dashboard.
+ * This function now fetches ALL relevant data and then aggregates it by user/kingdom on the server-side.
+ * @param {string} period - 'currentWeek', 'lastWeek', 'currentMonth', 'lastMonth'.
+ * @returns {object} An object containing aggregated data and period dates.
+ */
+function getAllUsersContributions(period) {
+  const { from, to } = calculateDates(period);
+  const allUsers = getAdminUsers();
+  const allRawContributions = getLokContributionData(from, to);
+
+  const aggregatedContributions = {}; // Use an object for efficient aggregation
+
+  allUsers.forEach(user => {
+    const userKingdomIds = user.kingdomIds;
+
+    allRawContributions.forEach(item => {
+      // Ensure item and item.kingdomId are defined before checking includes
+      if (item && item.kingdomId && userKingdomIds.includes(item.kingdomId)) {
+        const key = `${user.username}-${item.kingdomId}`; // Unique key for username-kingdomId combination
+        if (!aggregatedContributions[key]) {
+          aggregatedContributions[key] = {
+            username: user.username,
+            kingdomId: item.kingdomId,
+            name: item.name || 'N/A', // Add name for clarity
+            continent: item.continent || 'N/A', // Add continent for clarity
+            total: 0
+          };
+        }
+        aggregatedContributions[key].total += item.total;
+      }
+    });
+  });
+
+  // Convert aggregated object to an array for return
+  const finalData = Object.values(aggregatedContributions);
+
+  // Sort the final data on the server side to reduce client-side work (optional but good practice)
+  finalData.sort((a, b) => {
+    if (a.username < b.username) return -1;
+    if (a.username > b.username) return 1;
+    return b.total - a.total;
+  });
+
+  const dataToReturn = { data: finalData, from: from, to: to };
+
+  const dataToReturnString = JSON.stringify(dataToReturn);
+  Logger.log(`Size of data returned by getAllUsersContributions: ${dataToReturnString.length / 1024} KB`);
+  
+  return dataToReturn;
+}
+
+/**
+ * Calculates and returns the top contributors (usernames) for a given period.
+ * Aggregates contributions by username.
+ * @param {string} period - 'currentWeek', 'lastWeek', 'currentMonth', 'lastMonth'.
+ * @returns {object[]} An array of objects, each with username and totalContribution, sorted descending.
+ */
+function getTopContributors(period) {
+  const { from, to } = calculateDates(period);
+  const allUsers = getAdminUsers(); // All registered users from the sheet
+  const allRawContributions = getLokContributionData(from, to); // All contributions (now fresh, as caching is removed)
+
+  const userContributions = {}; // { username: totalPoints }
+
+  allUsers.forEach(user => {
+    userContributions[user.username] = 0; // Initialize total for each user
+    const userKingdomIds = user.kingdomIds;
+
+    // Sum contributions for this user's kingdoms
+    allRawContributions.forEach(item => {
+      if (userKingdomIds.includes(item.kingdomId)) {
+        userContributions[user.username] += item.total;
+      }
+    });
+  });
+
+  // Convert to array of objects for sorting and return
+  const sortedContributors = Object.keys(userContributions).map(username => ({
+    username: username,
+    totalContribution: userContributions[username]
+  })).sort((a, b) => b.totalContribution - a.totalContribution); // Sort descending by totalContribution
+
+  return { data: sortedContributors, from: from, to: to };
+}
+
+/**
+ * Helper function to calculate 'from' and 'to' dates based on a period.
+ * Adjusts to ensure 'to' date is usually 'today' for 'current' periods
+ * and 'yesterday' for 'last' periods to avoid "under 7 days" issues if API checks up to current time.
+ * @param {string} period - 'currentWeek', 'lastWeek', 'currentMonth', 'lastMonth'.
+ * @returns {object} An object with from and to dates in YYYY-MM-DD format.
+ */
+function calculateDates(period) {
+  const today = new Date();
+  let fromDate = new Date();
+  let toDate = new Date();
+
+  // Set time to start of day for consistent date ranges
+  today.setHours(0, 0, 0, 0);
+
+  switch (period) {
+    case 'currentWeek':
+      const dayOfWeekCurrent = today.getDay(); // Sunday is 0, Monday is 1
+      fromDate.setDate(today.getDate() - dayOfWeekCurrent); // Start of current week (Sunday)
+      toDate = new Date(today); // Today's date
+      break;
+    case 'lastWeek':
+      const dayOfWeekLast = today.getDay();
+      fromDate.setDate(today.getDate() - dayOfWeekLast - 7); // Start of last week (Sunday of last week)
+      toDate.setDate(today.getDate() - dayOfWeekLast - 1); // End of last week (Saturday of last week)
+      break;
+    case 'currentMonth':
+      fromDate = new Date(today.getFullYear(), today.getMonth(), 1); // First day of current month
+      toDate = new Date(today); // Today's date
+      break;
+    case 'lastMonth':
+      fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1); // First day of last month
+      toDate = new Date(today.getFullYear(), today.getMonth(), 0); // Last day of last month
+      break;
+    default:
+      // Default to current week if period is not recognized
+      const defaultDayOfWeek = today.getDay();
+      fromDate.setDate(today.getDate() - defaultDayOfWeek);
+      toDate = new Date(today);
+      break;
+  }
+
+  // Format dates to YYYY-MM-DD
+  const format = (date) => Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+  return { from: format(fromDate), to: format(toDate) };
+}
