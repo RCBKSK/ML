@@ -92,33 +92,43 @@ function registerUser(username, walletAddress, kingdomIds) {
  * @returns {object} An object indicating success/failure and user data if successful.
  */
 function loginUser(username) {
+  Logger.log(`[loginUser] Attempting login for username: ${username}`);
+
   // Check if the username is one of the defined admin usernames
   if (ADMIN_USERNAMES.map(name => name.toLowerCase()).includes(username.toLowerCase())) {
+      Logger.log(`[loginUser] Admin user '${username}' detected. Bypassing sheet lookup.`);
       return { success: true, user: { username: username, kingdomIds: [] } }; // Admin has no specific kingdom IDs tied to their account
   }
 
   try {
     const sheet = getUserDataSheet();
     const data = sheet.getDataRange().getValues();
-    const existingUsers = data.slice(1);
+    Logger.log(`[loginUser] Fetched sheet data. Total rows: ${data.length}`);
+    const existingUsers = data.slice(1); // All rows except header
 
     const USERNAME_COL = 0;
     const WALLET_COL = 1;
     const KINGDOM_IDS_COL = 2;
 
     for (let i = 0; i < existingUsers.length; i++) { // Iterate through user rows (excluding header)
-      if (existingUsers[i][USERNAME_COL] && String(existingUsers[i][USERNAME_COL]).toLowerCase() === username.toLowerCase()) {
+      const currentRow = existingUsers[i];
+      const sheetUsername = currentRow[USERNAME_COL];
+      Logger.log(`[loginUser] Checking row ${i + 2}: Username in sheet: '${sheetUsername}', Wallet: '${currentRow[WALLET_COL]}', Kingdoms: '${currentRow[KINGDOM_IDS_COL]}'`);
+
+      if (sheetUsername && String(sheetUsername).toLowerCase() === username.toLowerCase()) {
         const user = {
-          username: existingUsers[i][USERNAME_COL],
-          walletAddress: existingUsers[i][WALLET_COL],
-          kingdomIds: String(existingUsers[i][KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '')
+          username: sheetUsername,
+          walletAddress: currentRow[WALLET_COL],
+          kingdomIds: String(currentRow[KINGDOM_IDS_COL] || '').split(',').map(id => id.trim()).filter(id => id !== '')
         };
+        Logger.log(`[loginUser] User found: ${JSON.stringify(user)}`);
         return { success: true, user: user };
       }
     }
+    Logger.log(`[loginUser] No regular user found for username: ${username}`);
     return { success: false, message: "Invalid username." };
   } catch (error) {
-    Logger.log("Error in loginUser: " + error.message);
+    Logger.log(`[loginUser] Error during login: ${error.message}`);
     return { success: false, message: "Server error during login: " + error.message };
   }
 }
@@ -147,7 +157,8 @@ function getAdminUsers() {
     return users;
   } catch (error) {
     Logger.log("Error in getAdminUsers: " + error.message);
-    throw new Error("Failed to retrieve user list: " + error.message);
+    // Returning an empty array with a log, so the frontend doesn't crash on this particular function's error
+    return []; 
   }
 }
 
@@ -271,62 +282,59 @@ function deleteKingdomFromUser(username, kingdomIdToDelete) {
 
 /**
  * Fetches land contribution data from the League of Kingdoms API for given land IDs and period.
- * This function **NO LONGER uses caching** to help debug the "Argument too large" error.
  * @param {string} fromDate - Start date in YYYY-MM-DD format.
  * @param {string} toDate - End date in YYYY-MM-DD format.
  * @returns {object[]} An array of contribution data items.
  */
 function getLokContributionData(fromDate, toDate) {
-  // Removed CacheService.getScriptCache() and cache.get() related code.
-  // This function will now always fetch fresh data from the LOK API.
-
   let allContributions = [];
-  const options = { 'muteHttpExceptions': true };
+  const options = { 'muteHttpExceptions': true }; // Ensures UrlFetchApp doesn't throw for HTTP errors (e.g., 404, 500)
 
   ALL_LAND_IDS.forEach(landId => {
     const apiUrl = `https://api-lok-live.leagueofkingdoms.com/api/stat/land/contribution?landId=${landId}&from=${fromDate}&to=${toDate}`;
     try {
       const response = UrlFetchApp.fetch(apiUrl, options);
+      const responseCode = response.getResponseCode();
       const content = response.getContentText();
-      const jsonData = JSON.parse(content);
 
-      if (jsonData && jsonData.contribution) {
-        allContributions.push(...jsonData.contribution);
+      if (responseCode === 200) {
+        try {
+          const jsonData = JSON.parse(content);
+          if (jsonData && jsonData.contribution) {
+            allContributions.push(...jsonData.contribution);
+          } else {
+             Logger.log(`LOK API (landId: ${landId}) returned 200 OK but no 'contribution' key or empty data. Response: ${content.substring(0, 500)}... (truncated)`);
+          }
+        } catch (jsonError) {
+          Logger.log(`JSON parsing error for landId ${landId}. Error: ${jsonError.message}. Full Response Content: ${content}`);
+        }
       } else {
-         Logger.log(`No contribution data for landId: ${landId}, Response: ${content}`);
+        Logger.log(`LOK API (landId: ${landId}) returned non-200 status code: ${responseCode}. Full Response Content: ${content}`);
       }
-    } catch (error) {
-      Logger.log(`Error fetching data for landId ${landId}: ${error.message}`);
+    } catch (fetchError) {
+      Logger.log(`Error fetching data for landId ${landId} from LOK API: ${fetchError.message}`);
     }
   });
 
   const jsonString = JSON.stringify(allContributions);
   Logger.log(`Raw LOK data stringified size (for return): ${jsonString.length / 1024} KB`);
   
-  // CACHING LOGIC HAS BEEN REMOVED FOR DEBUGGING PURPOSES.
-  // It was previously here, but caused "Argument too large" error.
-  // If the error disappears, it confirms the CacheService was the issue.
-
   return allContributions;
 }
 
 
 /**
  * Fetches contributions for a specific user's kingdoms based on a selected period.
- * This function now fetches ALL relevant data and filters by user's kingdom IDs.
  * @param {string[]} userKingdomIds - Array of kingdom IDs for the current user.
  * @param {string} period - 'currentWeek', 'lastWeek', 'currentMonth', 'lastMonth'.
  * @returns {object} An object containing data and period dates.
  */
 function getContributionsForUser(userKingdomIds, period) {
   const { from, to } = calculateDates(period);
-  // Fetch all relevant data first (will now fetch fresh, as caching is removed in getLokContributionData)
   const allRawData = getLokContributionData(from, to);
 
-  // Now, filter this data based on the user's specific kingdom IDs
   const filteredData = allRawData.filter(item => userKingdomIds.includes(item.kingdomId));
 
-  // Add from/to dates to each item for display on client side
   const formattedData = filteredData.map(item => ({
       ...item,
       from: from,
@@ -338,7 +346,6 @@ function getContributionsForUser(userKingdomIds, period) {
 
 /**
  * Fetches contributions for all registered users for the admin dashboard.
- * This function now fetches ALL relevant data and then aggregates it by user/kingdom on the server-side.
  * @param {string} period - 'currentWeek', 'lastWeek', 'currentMonth', 'lastMonth'.
  * @returns {object} An object containing aggregated data and period dates.
  */
@@ -347,21 +354,20 @@ function getAllUsersContributions(period) {
   const allUsers = getAdminUsers();
   const allRawContributions = getLokContributionData(from, to);
 
-  const aggregatedContributions = {}; // Use an object for efficient aggregation
+  const aggregatedContributions = {};
 
   allUsers.forEach(user => {
     const userKingdomIds = user.kingdomIds;
 
     allRawContributions.forEach(item => {
-      // Ensure item and item.kingdomId are defined before checking includes
       if (item && item.kingdomId && userKingdomIds.includes(item.kingdomId)) {
-        const key = `${user.username}-${item.kingdomId}`; // Unique key for username-kingdomId combination
+        const key = `${user.username}-${item.kingdomId}`;
         if (!aggregatedContributions[key]) {
           aggregatedContributions[key] = {
             username: user.username,
             kingdomId: item.kingdomId,
-            name: item.name || 'N/A', // Add name for clarity
-            continent: item.continent || 'N/A', // Add continent for clarity
+            name: item.name || 'N/A',
+            continent: item.continent || 'N/A',
             total: 0
           };
         }
@@ -370,10 +376,8 @@ function getAllUsersContributions(period) {
     });
   });
 
-  // Convert aggregated object to an array for return
   const finalData = Object.values(aggregatedContributions);
 
-  // Sort the final data on the server side to reduce client-side work (optional but good practice)
   finalData.sort((a, b) => {
     if (a.username < b.username) return -1;
     if (a.username > b.username) return 1;
@@ -396,28 +400,26 @@ function getAllUsersContributions(period) {
  */
 function getTopContributors(period) {
   const { from, to } = calculateDates(period);
-  const allUsers = getAdminUsers(); // All registered users from the sheet
-  const allRawContributions = getLokContributionData(from, to); // All contributions (now fresh, as caching is removed)
+  const allUsers = getAdminUsers();
+  const allRawContributions = getLokContributionData(from, to);
 
-  const userContributions = {}; // { username: totalPoints }
+  const userContributions = {};
 
   allUsers.forEach(user => {
-    userContributions[user.username] = 0; // Initialize total for each user
+    userContributions[user.username] = 0;
     const userKingdomIds = user.kingdomIds;
 
-    // Sum contributions for this user's kingdoms
     allRawContributions.forEach(item => {
-      if (userKingdomIds.includes(item.kingdomId)) {
+      if (item && userKingdomIds.includes(item.kingdomId)) {
         userContributions[user.username] += item.total;
       }
     });
   });
 
-  // Convert to array of objects for sorting and return
   const sortedContributors = Object.keys(userContributions).map(username => ({
     username: username,
     totalContribution: userContributions[username]
-  })).sort((a, b) => b.totalContribution - a.totalContribution); // Sort descending by totalContribution
+  })).sort((a, b) => b.totalContribution - a.totalContribution);
 
   return { data: sortedContributors, from: from, to: to };
 }
