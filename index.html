@@ -1,234 +1,1286 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LOK Contribution Portal</title>
-  <style>
-    .page { display: none; }
-    .page.active { display: block; }
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, select, textarea, button { margin: 5px 0; padding: 8px; width: 300px; max-width: 100%; }
-    button { cursor: pointer; }
-    .status { color: blue; margin: 10px 0; }
-    table { border-collapse: collapse; width: 100%; max-width: 800px; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f0f0f0; }
-  </style>
-  <script>
-    let currentUser = null;
-    let isAdmin = false;
-
-    const admins = ['rcbk', 'ml'];
-
-    function showPage(id) {
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      clearStatus();
-    }
-
-    function clearStatus() {
-      document.querySelectorAll('.status').forEach(s => s.innerText = '');
-    }
-
-    function login() {
-      clearStatus();
-      const username = document.getElementById('loginUsername').value.trim();
-      if (!username) {
-        alert('Please enter your username.');
-        return;
-      }
-      document.getElementById('loginStatus').innerText = 'Checking user... Please wait.';
-      google.script.run
-        .withSuccessHandler(function(exists) {
-          if (exists) {
-            currentUser = username;
-            isAdmin = admins.includes(username.toLowerCase());
-            document.getElementById('loginStatus').innerText = '';
-            showPage('resultsPage');
-            document.getElementById('adminPanel').style.display = isAdmin ? 'block' : 'none';
-            loadUserContributions();
-            if (isAdmin) loadAllUserList();
-          } else {
-            alert('User not found. Please register first.');
-            document.getElementById('loginStatus').innerText = '';
-          }
-        })
-        .withFailureHandler(function(err) {
-          alert('Error during login: ' + err.message);
-          document.getElementById('loginStatus').innerText = '';
-        })
-        .validateUser(username);
-    }
-
-    function register() {
-      clearStatus();
-      const username = document.getElementById('regUsername').value.trim();
-      const wallet = document.getElementById('regWallet').value.trim();
-      const kingdomsText = document.getElementById('regKingdoms').value.trim();
-      if (!username || !wallet) {
-        alert('Please fill in username and wallet address.');
-        return;
-      }
-      const kingdomIds = kingdomsText ? kingdomsText.split(',').map(k => k.trim()).filter(k => k) : [];
-      document.getElementById('registerStatus').innerText = 'Registering... Please wait.';
-      google.script.run
-        .withSuccessHandler(function(res) {
-          alert(res.message);
-          document.getElementById('registerStatus').innerText = '';
-          if (res.success) showPage('loginPage');
-        })
-        .withFailureHandler(function(err) {
-          alert('Error during registration: ' + err.message);
-          document.getElementById('registerStatus').innerText = '';
-        })
-        .registerUser(username, wallet, kingdomIds);
-    }
-
-    function loadUserContributions() {
-  clearStatus();
-  if (!currentUser) return;
-  const dateRange = document.getElementById('dateRangeSelect').value;
-  document.getElementById('resultStatus').innerText = 'Fetching contribution data... Please wait.';
-  document.getElementById('contributionTable').innerHTML = '';
-
-  if (isAdmin) {
-    google.script.run
-      .withSuccessHandler(function(data) {
-        console.log("Admin Data:", data);
-        document.getElementById('resultStatus').innerText = '';
-
-        if (!Array.isArray(data) || data.length === 0) {
-          document.getElementById('contributionTable').innerHTML = '<p>No contribution data found.</p>';
-          return;
+    <base target="_top">
+    <title>C61 Land Programme</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Variables for easy theming */
+        :root {
+            --primary-color: #3f51b5; /* Deeper blue */
+            --primary-dark: #303f9f;
+            --primary-light: #c5cae9; /* Lighter shade for gradients */
+            --secondary-color: #ff9800; /* Orange accent */
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --text-dark: #333;
+            --text-light: #f8f8f8;
+            --bg-light: #ffffff;
+            --border-light: #e0e0e0;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.2);
+            --transition-speed: 0.3s;
         }
 
-        let html = '<table><tr><th>Username</th><th>Total Contribution</th></tr>';
-        data.forEach(row => {
-          html += `<tr><td>${row.username}</td><td>${row.total}</td></tr>`;
-        });
-        html += '</table>';
-        document.getElementById('contributionTable').innerHTML = html;
-      })
-      .withFailureHandler(err => {
-        document.getElementById('resultStatus').innerText = '';
-        alert('Error: ' + err.message);
-      })
-      .getAllUserContributionTotals(dateRange);
-  } else {
-    google.script.run
-      .withSuccessHandler(function(data) {
-        console.log("User Data:", data);
-        document.getElementById('resultStatus').innerText = '';
-
-        if (!Array.isArray(data) || data.length === 0) {
-          document.getElementById('contributionTable').innerHTML = '<p>No data found.</p>';
-          return;
+        /* Basic Reset & Body Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--primary-light) 0%, #bbdefb 100%);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-y: auto; /* Allow scrolling for taller content */
         }
 
-        let html = '<table><tr><th>Kingdom ID</th><th>Name</th><th>Continent</th><th>Total</th></tr>';
-        data.forEach(c => {
-          html += `<tr><td>${c.kingdomId}</td><td>${c.name}</td><td>${c.continent}</td><td>${c.total}</td></tr>`;
-        });
-        html += '</table>';
-        document.getElementById('contributionTable').innerHTML = html;
-      })
-      .withFailureHandler(err => {
-        document.getElementById('resultStatus').innerText = '';
-        alert('Error: ' + err.message);
-      })
-      .getUserContribution(currentUser, dateRange);
-  }
-}
-    function loadAllUserList() {
-      google.script.run.withSuccessHandler(function(userList) {
-        const select = document.getElementById('adminUserSelect');
-        select.innerHTML = '<option value="">-- Choose a user --</option>';
-        userList.forEach(user => {
-          const option = document.createElement('option');
-          option.value = user;
-          option.textContent = user;
-          select.appendChild(option);
-        });
-      }).getAllUsernames();
-    }
-
-    function loadUserDetails() {
-      const username = document.getElementById('adminUserSelect').value;
-      if (!username) return;
-      document.getElementById('userDetails').innerText = 'Loading...';
-      google.script.run.withSuccessHandler(function(data) {
-        if (!data) {
-          document.getElementById('userDetails').innerText = 'User not found.';
-          return;
+        /* Main Container */
+        .container {
+            max-width: 960px; /* Increased max-width */
+            width: 95%; /* Responsive width */
+            padding: 40px;
+            background-color: var(--bg-light);
+            border-radius: 18px;
+            box-shadow: 0 15px 30px var(--shadow-medium);
+            backdrop-filter: blur(10px);
+            box-sizing: border-box;
+            animation: fadeIn var(--transition-speed) ease-out;
+            margin: 20px 0; /* Add vertical margin for spacing on small screens */
         }
-        let html = `<p><strong>Wallet:</strong> ${data.wallet}</p>`;
-        html += `<p><strong>Kingdoms:</strong> ${data.kingdomIds?.join(', ') || 'None'}</p>`;
-        document.getElementById('userDetails').innerHTML = html;
-      }).getUserDetails(username);
-    }
 
-    function logout() {
-      currentUser = null;
-      isAdmin = false;
-      showPage('loginPage');
-      document.getElementById('loginUsername').value = '';
-    }
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    window.onload = function() {
-      showPage('loginPage');
-    }
-  </script>
+        /* Headings */
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            font-weight: 800;
+            font-size: 2.8em; /* Significantly larger */
+            text-shadow: 1px 2px 4px var(--shadow-light);
+            letter-spacing: -0.03em;
+        }
+        h3 {
+            color: var(--primary-dark);
+            margin-top: 35px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.8em;
+        }
+        .initial-subtitle {
+            text-align: center;
+            font-size: 0.9em;
+            color: var(--text-dark);
+            margin-top: -15px;
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+        .initial-subtitle strong {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* Section Display */
+        .section {
+            display: none;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.05em;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            padding: 14px 18px;
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            box-sizing: border-box;
+            width: 100%; /* Full width within its parent */
+            max-width: 450px; /* Constrain width for desktop */
+            font-size: 1em;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+            background-color: #fcfcfc;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(63, 81, 181, 0.2);
+            background-color: var(--bg-light);
+        }
+        #kingdomInputsContainer {
+            border: 1px dashed var(--border-light);
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #fcfcfc;
+            margin-top: 10px;
+            box-shadow: inset 0 1px 3px var(--shadow-light);
+        }
+        #kingdomInputsContainer input {
+            margin-bottom: 12px;
+        }
+
+        /* Buttons */
+        .button-group {
+            text-align: center;
+            margin-top: 35px;
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            justify-content: center;
+            gap: 15px; /* Spacing between buttons */
+        }
+        .button-group button,
+        .add-kingdom-btn,
+        .nav-btn,
+        .action-button {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            color: var(--text-light);
+            cursor: pointer;
+            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease, background var(--transition-speed) ease;
+            font-weight: 600;
+            box-shadow: 0 5px 15px var(--shadow-medium);
+            font-size: 1.05em;
+            white-space: nowrap; /* Prevent text wrapping inside button */
+        }
+        .button-group button:hover,
+        .add-kingdom-btn:hover,
+        .nav-btn:hover,
+        .action-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px var(--shadow-medium);
+            background: linear-gradient(to right, var(--primary-dark), var(--primary-color));
+        }
+
+        .add-kingdom-btn {
+            background: linear-gradient(to right, var(--success-color), #388e3c);
+            padding: 10px 20px;
+            font-size: 0.95em;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        .add-kingdom-btn:hover {
+            background: linear-gradient(to right, #388e3c, var(--success-color));
+        }
+        .action-button.delete-btn {
+            background: linear-gradient(to right, var(--error-color), #d32f2f);
+            padding: 8px 15px;
+            font-size: 0.85em;
+            margin: 5px;
+        }
+        .action-button.delete-btn:hover {
+            background: linear-gradient(to right, #d32f2f, var(--error-color));
+        }
+
+        /* Navigation Bar */
+        .nav-bar {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            flex-wrap: wrap; /* Allow nav buttons to wrap */
+            justify-content: center;
+            gap: 10px; /* Space between nav buttons */
+        }
+        .nav-bar button {
+            background: var(--bg-light);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-light);
+            box-shadow: 0 2px 5px var(--shadow-light);
+            padding: 10px 20px;
+            font-size: 0.9em;
+        }
+        .nav-bar button.active {
+            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            color: var(--text-light);
+            border: none;
+            box-shadow: 0 4px 10px var(--shadow-medium);
+        }
+
+        /* Messages (Success/Error/Loading) */
+        .message {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 600;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all var(--transition-speed) ease-in-out;
+            opacity: 0; /* Hidden by default, JS handles opacity */
+            visibility: hidden;
+            max-height: 0;
+            overflow: hidden;
+            display: flex; /* Use flex for centering spinner */
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .message.show {
+            opacity: 1;
+            visibility: visible;
+            max-height: 100px; /* Allow content */
+            margin-bottom: 20px;
+        }
+        .error-message {
+            color: var(--error-color);
+            background-color: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--error-color);
+        }
+        .success-message {
+            color: var(--success-color);
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--success-color);
+        }
+        .loading-message {
+            color: var(--primary-color);
+            background-color: rgba(63, 81, 181, 0.08);
+            border: 1px solid var(--primary-light);
+        }
+        /* Spinner CSS */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-dark);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        .loading-message .spinner {
+            display: block; /* Show when loading */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Tables */
+        .table-container {
+            max-height: 450px; /* Slightly taller for desktop */
+            overflow-y: auto;
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            box-shadow: inset 0 2px 10px var(--shadow-light);
+            margin-top: 25px;
+            background-color: var(--bg-light);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+        table th, table td {
+            border: 1px solid #f0f0f0;
+            padding: 14px 18px;
+            text-align: left;
+            word-break: break-word; /* Ensure long content wraps */
+        }
+        table th {
+            background-color: #e8eaf6; /* Light blue header */
+            font-weight: 700;
+            color: var(--primary-dark);
+            position: sticky;
+            top: 0;
+            z-index: 2; /* Ensure header is above rows when scrolling */
+            cursor: pointer; /* Indicate sortable */
+            user-select: none; /* Prevent text selection on click */
+        }
+        table th.asc::after { content: ' \25B2'; } /* Up arrow */
+        table th.desc::after { content: ' \25BC'; } /* Down arrow */
+
+        table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        table tbody tr:hover {
+            background-color: #eef1f9;
+            transition: background-color 0.2s ease;
+        }
+        .total-row {
+            font-weight: 700;
+            background-color: #e3f2fd;
+            color: var(--primary-dark);
+            font-size: 1.1em;
+            position: sticky;
+            bottom: 0;
+            z-index: 1; /* Ensure total row is above normal rows when scrolling */
+        }
+        p strong {
+            color: var(--primary-color);
+        }
+        #userOverallTotal, #adminOverallTotal, #topContributorsOverallTotal {
+            color: var(--secondary-color); /* Highlight total numbers */
+            font-size: 1.2em;
+        }
+
+        /* Search/Filter Inputs */
+        .filter-group {
+            margin-top: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-group label {
+            margin-bottom: 0;
+        }
+        .filter-group input {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            max-width: 300px;
+        }
+        .filter-group input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(63, 81, 181, 0.1);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                width: 98%;
+                margin: 15px 0;
+            }
+            h2 {
+                font-size: 2.2em;
+                margin-bottom: 20px;
+            }
+            h3 {
+                font-size: 1.5em;
+                margin-top: 25px;
+                margin-bottom: 15px;
+            }
+            .initial-subtitle {
+                font-size: 0.8em;
+                margin-bottom: 25px;
+            }
+            .form-group input, .form-group select {
+                max-width: none; /* Occupy full width */
+            }
+            .button-group button, .add-kingdom-btn, .nav-btn, .action-button {
+                padding: 12px 20px;
+                font-size: 0.95em;
+                width: auto; /* Allow buttons to size naturally */
+                flex-grow: 1; /* Make them grow if space allows */
+                margin: 5px; /* Adjust margin for wrapped buttons */
+            }
+            .button-group {
+                gap: 10px;
+            }
+            .nav-bar {
+                flex-direction: column; /* Stack nav buttons vertically */
+                gap: 8px;
+            }
+            .table-container {
+                overflow-x: auto; /* Enable horizontal scroll for tables */
+                -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            }
+            table {
+                min-width: 600px; /* Ensure table doesn't shrink too much */
+            }
+            table th, table td {
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
+            .message {
+                padding: 12px;
+                font-size: 0.9em;
+            }
+            .filter-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .filter-group input {
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+                border-radius: 12px;
+                margin: 10px 0;
+            }
+            h2 {
+                font-size: 1.8em;
+            }
+            h3 {
+                font-size: 1.3em;
+            }
+            .initial-subtitle {
+                font-size: 0.75em;
+            }
+            .button-group button, .add-kingdom-btn, .nav-btn, .action-button {
+                padding: 10px 15px;
+                font-size: 0.85em;
+                flex-grow: 1;
+                margin: 4px;
+            }
+            .nav-bar button {
+                font-size: 0.8em;
+            }
+            table th, table td {
+                padding: 8px 10px;
+                font-size: 0.85em;
+            }
+            .action-button.delete-btn {
+                padding: 6px 10px;
+                font-size: 0.75em;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="loginPage" class="page">
-    <h2>Login</h2>
-    <input id="loginUsername" type="text" placeholder="Enter Username" /><br/>
-    <button onclick="login()">Login</button>
-    <div id="loginStatus" class="status"></div>
-    <p>New user? <a href="javascript:void(0)" onclick="showPage('registerPage')">Register here</a></p>
-  </div>
+    <div class="container">
+        <div id="initialPage" class="section">
+            <h2>C61 Land Programme</h2>
+            <p class="initial-subtitle">developed by <strong>RCBK.Dev</strong></p>
+            <div class="button-group">
+                <button onclick="showSection('loginSection')">Login</button>
+                <button onclick="showSection('registerSection')">Register</button>
+            </div>
+        </div>
 
-  <div id="registerPage" class="page">
-    <h2>Register</h2>
-    <input id="regUsername" type="text" placeholder="Set Username" /><br/>
-    <input id="regWallet" type="text" placeholder="Wallet Address" /><br/>
-    <textarea id="regKingdoms" rows="3" placeholder="Enter Kingdom UIDs, comma separated"></textarea><br/>
-    <button onclick="register()">Register</button>
-    <div id="registerStatus" class="status"></div>
-    <p>Already have an account? <a href="javascript:void(0)" onclick="showPage('loginPage')">Login here</a></p>
-  </div>
+        <div id="loginSection" class="section">
+            <h2>Login</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername">Username:</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit">Login</button>
+                    <button type="button" onclick="showSection('initialPage')">Back</button>
+                </div>
+                <p id="loginMessage" class="message"><span class="spinner"></span></p>
+            </form>
+        </div>
 
-  <div id="resultsPage" class="page">
-    <h2 id="resultsTitle">Contribution Dashboard</h2>
-    <p>Welcome, <strong><span id="usernameDisplay"></span></strong>! <button onclick="logout()">Logout</button></p>
-    <label for="dateRangeSelect">Select Date Range:</label><br/>
-    <select id="dateRangeSelect" onchange="loadUserContributions()">
-      <option value="currentWeek">Current Week</option>
-      <option value="lastWeek">Last Week</option>
-      <option value="currentMonth" selected>Current Month</option>
-      <option value="lastMonth">Last Month</option>
-    </select>
-    <div id="resultStatus" class="status"></div>
-    <div id="contributionTable"></div>
+        <div id="registerSection" class="section">
+            <h2>Register</h2>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="regUsername">Username:</label>
+                    <input type="text" id="regUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="regWalletAddress">Wallet Address:</label>
+                    <input type="text" id="regWalletAddress" required>
+                </div>
+                <div class="form-group">
+                    <label>Kingdom IDs:</label>
+                    <div id="kingdomInputsContainer">
+                        <input type="text" class="kingdom-id-input" placeholder="Kingdom ID 1 (e.g., 6716055e58f73c2ae87c9d82)" required>
+                    </div>
+                    <button type="button" class="add-kingdom-btn" onclick="addKingdomInput()">+ Add Another Kingdom ID</button>
+                </div>
+                <div class="button-group">
+                    <button type="submit">Register</button>
+                    <button type="button" onclick="showSection('initialPage')">Back</button>
+                </div>
+                <p id="registerMessage" class="message"><span class="spinner"></span></p>
+            </form>
+        </div>
 
-    <!-- Admin Panel -->
-    <div id="adminPanel" style="display:none; border:1px solid #ccc; padding:10px; margin-top:20px;">
-      <h3>Admin Panel</h3>
-      <label for="adminUserSelect">Select User:</label><br/>
-      <select id="adminUserSelect" onchange="loadUserDetails()">
-        <option value="">-- Choose a user --</option>
-      </select>
-      <div id="userDetails" style="margin-top:10px;"></div>
+        <div id="userDashboardSection" class="section">
+            <h2 id="welcomeUser">Welcome, User!</h2>
+            <div class="nav-bar">
+                <button class="nav-btn active" onclick="showUserContributions()">My Contributions</button>
+                <button class="nav-btn" onclick="showManageKingdoms()">Manage Kingdoms</button>
+                <button class="nav-btn" onclick="showAdminDashboard()">Admin Dashboard</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <div id="userContributionsSubSection">
+                <h3>My Land Contributions</h3>
+                <div class="form-group">
+                    <label for="contributionPeriod">Select Period:</label>
+                    <select id="contributionPeriod" onchange="getUserContributions()">
+                        <option value="currentWeek">Current Week</option>
+                        <option value="lastWeek">Last Week</option>
+                        <option value="currentMonth">Current Month</option>
+                        <option value="lastMonth">Last Month</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table id="userContributionTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('userContributionTable', 0)">From</th>
+                                <th onclick="sortTable('userContributionTable', 1)">To</th>
+                                <th onclick="sortTable('userContributionTable', 2)">Kingdom ID</th>
+                                <th onclick="sortTable('userContributionTable', 3)">Name</th>
+                                <th onclick="sortTable('userContributionTable', 4)">Continent</th>
+                                <th onclick="sortTable('userContributionTable', 5)">Total Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan='6'>Select a period to see contributions.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="text-align: right; font-weight: bold; margin-top: 15px;">Total Contribution for selected kingdoms: <span id="userOverallTotal">0</span></p>
+                <div class="button-group">
+                     <button type="button" onclick="exportUserContributionsToCSV()">Export to CSV</button>
+                </div>
+                 <p id="userContributionMessage" class="message"><span class="spinner"></span></p>
+            </div>
+
+            <div id="manageKingdomsSubSection" style="display: none;">
+                <h3>Manage Your Kingdom IDs</h3>
+                <div class="form-group">
+                    <label for="newKingdomId">Add New Kingdom ID:</label>
+                    <input type="text" id="newKingdomId" placeholder="Enter new Kingdom ID (e.g., 6716055e58f73c2ae87c9d82)">
+                    <button type="button" class="add-kingdom-btn" onclick="addNewKingdom()">Add Kingdom</button>
+                </div>
+                <div class="table-container">
+                    <table id="userKingdomsTable">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('userKingdomsTable', 0)">Kingdom ID</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan='2'>Loading your kingdom IDs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p id="manageKingdomsMessage" class="message"><span class="spinner"></span></p>
+                <div class="button-group">
+                    <button type="button" onclick="showUserContributions()">Back to Contributions</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminDashboardSection" class="section">
+            <h2>Admin Dashboard</h2>
+            <div class="nav-bar">
+                <button class="nav-btn" onclick="showUserContributions()">My Contributions</button>
+                <button class="nav-btn active" onclick="showAdminDashboard()">Admin Dashboard</button>
+                <button class="nav-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <h3>All Registered Users</h3>
+            <div class="filter-group">
+                <label for="userSearch">Search Users:</label>
+                <input type="text" id="userSearch" onkeyup="filterTable('adminUsersTable', 'userSearch')">
+            </div>
+            <div class="table-container">
+                <table id="adminUsersTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('adminUsersTable', 0)">Username</th>
+                            <th onclick="sortTable('adminUsersTable', 1)">Wallet Address</th>
+                            <th onclick="sortTable('adminUsersTable', 2)">Kingdom IDs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan='3'>Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 30px;">All User Contributions</h3>
+            <div class="filter-group">
+                <label for="adminContributionPeriod">Select Period:</label>
+                <select id="adminContributionPeriod" onchange="getAdminContributions()">
+                    <option value="currentWeek">Current Week</option>
+                    <option value="lastWeek">Last Week</option>
+                    <option value="currentMonth">Current Month</option>
+                    <option value="lastMonth">Last Month</option>
+                </select>
+                <label for="contributionSearch">Filter:</label>
+                <input type="text" id="contributionSearch" onkeyup="filterTable('adminContributionTable', 'contributionSearch')" placeholder="Search Username or Kingdom ID">
+            </div>
+            <div class="table-container">
+                <table id="adminContributionTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('adminContributionTable', 0)">Username</th>
+                            <th onclick="sortTable('adminContributionTable', 1)">Kingdom ID</th>
+                            <th onclick="sortTable('adminContributionTable', 2)">Name</th>
+                            <th onclick="sortTable('adminContributionTable', 3)">Continent</th>
+                            <th onclick="sortTable('adminContributionTable', 4)">Total Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan='5'>Select a period to see contributions.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="text-align: right; font-weight: bold; margin-top: 15px;">Overall Total Contributions (All Users): <span id="adminOverallTotal">0</span></p>
+             <div class="button-group">
+                 <button type="button" onclick="exportAdminContributionsToCSV()">Export to CSV</button>
+            </div>
+            <p id="adminContributionMessage" class="message"><span class="spinner"></span></p>
+
+            <h3 style="margin-top: 30px;">Top Contributors</h3>
+            <div class="form-group">
+                <label for="topContributorPeriod">Select Period:</label>
+                <select id="topContributorPeriod" onchange="getTopContributorsData()">
+                    <option value="currentWeek">Current Week</option>
+                    <option value="lastWeek">Last Week</option>
+                    <option value="currentMonth">Current Month</option>
+                    <option value="lastMonth">Last Month</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table id="topContributorsTable">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('topContributorsTable', 0)">Rank</th>
+                            <th onclick="sortTable('topContributorsTable', 1)">Username</th>
+                            <th onclick="sortTable('topContributorsTable', 2)">Total Contribution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan='3'>Loading top contributors...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="text-align: right; font-weight: bold; margin-top: 15px;">Period Total: <span id="topContributorsOverallTotal">0</span></p>
+            <p id="topContributorsMessage" class="message"><span class="spinner"></span></p>
+        </div>
     </div>
-  </div>
 
-  <script>
-    const observer = new MutationObserver(() => {
-      if (document.getElementById('resultsPage').classList.contains('active')) {
-        document.getElementById('usernameDisplay').innerText = currentUser || '';
-        document.getElementById('resultsTitle').innerText = isAdmin ? 'All Users Contribution Data (Admin View)' : 'Your Contribution Data';
-      }
-    });
-    observer.observe(document.getElementById('resultsPage'), { attributes: true, attributeFilter: ['class'] });
-  </script>
+    <script>
+        // Global state
+        let currentUser = null; // Stores logged-in user data
+        const ADMIN_USERNAMES = ["HelenA", "RCBK.dev", "Mlands1"]; // Updated to an array of admin usernames
+
+        // Helper to set message with type (success/error/loading) and optional timeout
+        let messageTimeoutId;
+        function setMessage(elementId, message, type, duration = 5000) { // type: 'success', 'error', 'loading'
+            clearTimeout(messageTimeoutId); // Clear any existing timeout
+            const element = document.getElementById(elementId);
+            const spinner = element.querySelector('.spinner');
+
+            element.textContent = message;
+            if (spinner) { // Re-append spinner if it exists
+                element.appendChild(spinner);
+            }
+            element.className = `message ${type}-message show`; // Add 'show' class
+
+            if (type === 'loading') {
+                if (spinner) spinner.style.display = 'block';
+            } else {
+                if (spinner) spinner.style.display = 'none';
+                messageTimeoutId = setTimeout(() => {
+                    element.classList.remove('show');
+                    // Optionally clear text after animation
+                    setTimeout(() => element.textContent = '', 300);
+                }, duration);
+            }
+        }
+
+        // Helper to show/hide loading indicator
+        function showLoading(messageElementId, loadingText = "Loading...") {
+            setMessage(messageElementId, loadingText, 'loading');
+        }
+
+        function hideLoading(messageElementId) {
+            clearTimeout(messageTimeoutId); // Stop any pending timeout for loading message
+            const element = document.getElementById(messageElementId);
+            element.classList.remove('show');
+            const spinner = element.querySelector('.spinner');
+            if (spinner) spinner.style.display = 'none';
+            setTimeout(() => element.textContent = '', 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            showSection('initialPage');
+        });
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
+
+            // Clear all messages when changing sections
+            document.querySelectorAll('.message').forEach(msgElement => {
+                msgElement.classList.remove('show');
+                msgElement.textContent = '';
+                clearTimeout(messageTimeoutId); // Clear any pending timeout
+                const spinner = msgElement.querySelector('.spinner');
+                if (spinner) spinner.style.display = 'none';
+            });
+
+            // Handle nav button active state
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+
+            if (sectionId === 'userDashboardSection') {
+                // Default to 'My Contributions' when entering user dashboard
+                document.querySelector('#userDashboardSection .nav-btn:nth-child(1)').classList.add('active');
+                document.getElementById('userContributionsSubSection').style.display = 'block';
+                document.getElementById('manageKingdomsSubSection').style.display = 'none'; // Hide manage kingdoms
+                getUserContributions(); // Load user contributions on dashboard entry
+            } else if (sectionId === 'adminDashboardSection') {
+                 document.querySelector('#adminDashboardSection .nav-btn:nth-child(2)').classList.add('active');
+                 getAdminUsers(); // Load admin users
+                 getAdminContributions(); // Load admin contributions
+                 getTopContributorsData(); // Load top contributors
+            }
+        }
+
+        function showUserContributions() {
+            showSection('userDashboardSection'); // This will default to contributions sub-section
+            document.querySelector('#userDashboardSection .nav-btn:nth-child(1)').classList.add('active'); // Activate 'My Contributions' button
+            getUserContributions(); // Load contributions
+        }
+
+        // Function to show Manage Kingdoms section
+        function showManageKingdoms() {
+            document.getElementById('userContributionsSubSection').style.display = 'none';
+            document.getElementById('manageKingdomsSubSection').style.display = 'block';
+            // Update active nav button
+            document.querySelectorAll('#userDashboardSection .nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('#userDashboardSection .nav-btn:nth-child(2)').classList.add('active');
+            loadUserKingdoms(); // Load kingdoms when showing this section
+        }
+
+        function showAdminDashboard() {
+            // Check if current user's username is in the ADMIN_USERNAMES array
+            if (currentUser && ADMIN_USERNAMES.map(name => name.toLowerCase()).includes(currentUser.username.toLowerCase())) {
+                showSection('adminDashboardSection');
+                // The showSection will call getAdminUsers(), getAdminContributions(), getTopContributorsData()
+            } else {
+                alert("You do not have administrative privileges to access this section.");
+                showSection('initialPage'); // Or stay on current page
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            alert("Logged out successfully!");
+            showSection('initialPage');
+        }
+
+        function addKingdomInput() {
+            const container = document.getElementById('kingdomInputsContainer');
+            const inputCount = container.querySelectorAll('.kingdom-id-input').length + 1;
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.className = 'kingdom-id-input';
+            newInput.placeholder = `Kingdom ID ${inputCount} (e.g., 6716055e58f73c2ae87c9d82)`;
+            newInput.required = true;
+            container.appendChild(newInput);
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            const username = document.getElementById('regUsername').value.trim();
+            const walletAddress = document.getElementById('regWalletAddress').value.trim();
+            const kingdomInputs = document.querySelectorAll('.kingdom-id-input');
+            const kingdomIds = Array.from(kingdomInputs)
+                                   .map(input => input.value.trim())
+                                   .filter(id => id !== '');
+
+            if (!username || !walletAddress || kingdomIds.length === 0) {
+                setMessage('registerMessage', "All fields are required and at least one Kingdom ID must be provided.", 'error');
+                return;
+            }
+
+            showLoading('registerMessage', 'Registering user...'); // Show loading indicator
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    hideLoading('registerMessage'); // Hide loading
+                    if (response.success) {
+                        setMessage('registerMessage', "Registration successful! You can now log in.", 'success');
+                        document.getElementById('regUsername').value = '';
+                        document.getElementById('regWalletAddress').value = '';
+                        document.getElementById('kingdomInputsContainer').innerHTML = '<input type="text" class="kingdom-id-input" placeholder="Kingdom ID 1 (e.g., 6716055e58f73c2ae87c9d82)" required>';
+                    } else {
+                        setMessage('registerMessage', response.message || "Registration failed. Please try again.", 'error');
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('registerMessage'); // Hide loading
+                    setMessage('registerMessage', "Error during registration: " + error.message, 'error');
+                })
+                .registerUser(username, walletAddress, kingdomIds);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+
+            if (!username) {
+                setMessage('loginMessage', "Username is required.", 'error');
+                return;
+            }
+
+            // Check for admin login
+            if (ADMIN_USERNAMES.map(name => name.toLowerCase()).includes(username.toLowerCase())) {
+                currentUser = { username: username, kingdomIds: [] }; // Admin has no specific kingdom IDs
+                document.getElementById('welcomeUser').textContent = `Welcome, ${username}!`; // Use actual username
+                showAdminDashboard(); // Direct admin to admin dashboard
+                setMessage('loginMessage', '', 'success'); // Clear message
+                document.getElementById('loginUsername').value = ''; // Clear input
+                return;
+            }
+
+            showLoading('loginMessage', 'Logging in...'); // Show loading indicator
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    hideLoading('loginMessage'); // Hide loading
+                    if (response.success) {
+                        currentUser = response.user;
+                        document.getElementById('welcomeUser').textContent = `Welcome, ${currentUser.username}!`;
+                        showUserContributions(); // Direct user to their dashboard
+                        setMessage('loginMessage', '', 'success'); // Clear message
+                        document.getElementById('loginUsername').value = ''; // Clear input
+                    } else {
+                        setMessage('loginMessage', response.message || "Login failed. Please check your username.", 'error');
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('loginMessage'); // Hide loading
+                    setMessage('loginMessage', "Error during login: " + error.message, 'error');
+                })
+                .loginUser(username);
+        }
+
+        function getUserContributions() {
+            if (!currentUser || ADMIN_USERNAMES.map(name => name.toLowerCase()).includes(currentUser.username.toLowerCase())) {
+                document.getElementById('userContributionTable').querySelector('tbody').innerHTML = '<tr><td colspan="6">Please log in as a regular user to see contributions.</td></tr>';
+                document.getElementById('userOverallTotal').textContent = '0';
+                return;
+            }
+
+            const period = document.getElementById('contributionPeriod').value;
+            const tableBody = document.querySelector("#userContributionTable tbody");
+            tableBody.innerHTML = "<tr><td colspan='6'>Fetching your kingdom contributions...</td></tr>"; // Initial message before spinner
+            document.getElementById('userOverallTotal').textContent = 'Calculating...';
+            showLoading('userContributionMessage', 'Fetching your contributions...');
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    hideLoading('userContributionMessage');
+                    displayUserContributions(response.data);
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('userContributionMessage');
+                    tableBody.innerHTML = `<tr><td colspan='6' class="message error-message">Error fetching contributions: ${error.message}</td></tr>`;
+                    document.getElementById('userOverallTotal').textContent = 'Error';
+                    setMessage('userContributionMessage', "Error fetching contributions: " + error.message, 'error');
+                    console.error("Error fetching user contributions:", error);
+                })
+                .getContributionsForUser(currentUser.kingdomIds, period);
+        }
+
+        function displayUserContributions(data) {
+            const tableBody = document.querySelector("#userContributionTable tbody");
+            tableBody.innerHTML = "";
+            let overallTotal = 0;
+
+            if (data && data.length > 0) {
+                const aggregatedData = {};
+                // Aggregate contributions by Kingdom ID
+                data.forEach(item => {
+                    if (!aggregatedData[item.kingdomId]) {
+                        aggregatedData[item.kingdomId] = {
+                            from: item.from || '',
+                            to: item.to || '',
+                            kingdomId: item.kingdomId,
+                            name: item.name || 'N/A',
+                            continent: item.continent || 'N/A',
+                            total: 0
+                        };
+                    }
+                    aggregatedData[item.kingdomId].total += item.total;
+                });
+
+                // Convert aggregated object to an array for sorting and display
+                const sortedAggregatedData = Object.values(aggregatedData).sort((a, b) => b.total - a.total);
+
+                sortedAggregatedData.forEach(item => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = item.from;
+                    row.insertCell(1).textContent = item.to;
+                    row.insertCell(2).textContent = item.kingdomId;
+                    row.insertCell(3).textContent = item.name;
+                    row.insertCell(4).textContent = item.continent;
+                    row.insertCell(5).textContent = item.total.toLocaleString(); // Format number
+                    overallTotal += item.total;
+                });
+
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='6'>No Contributions Found for the selected period or kingdoms.</td></tr>";
+            }
+            document.getElementById('userOverallTotal').textContent = overallTotal.toLocaleString();
+        }
+
+
+        // Load user's current kingdoms for the manage section
+        function loadUserKingdoms() {
+            if (!currentUser || ADMIN_USERNAMES.map(name => name.toLowerCase()).includes(currentUser.username.toLowerCase())) {
+                document.getElementById('userKingdomsTable').querySelector('tbody').innerHTML = '<tr><td colspan="2">Please log in as a regular user.</td></tr>';
+                return;
+            }
+            const tableBody = document.querySelector("#userKingdomsTable tbody");
+            tableBody.innerHTML = "<tr><td colspan='2'>Loading your kingdom IDs...</td></tr>";
+            showLoading('manageKingdomsMessage', 'Loading your kingdom IDs...');
+
+            // The currentUser object already has the latest kingdomIds after login/update
+            const kingdomIds = currentUser.kingdomIds;
+            hideLoading('manageKingdomsMessage');
+            tableBody.innerHTML = ''; // Clear loading message
+
+            if (kingdomIds && kingdomIds.length > 0) {
+                kingdomIds.forEach(id => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = id;
+                    const actionCell = row.insertCell(1);
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.className = 'action-button delete-btn';
+                    deleteButton.onclick = () => deleteKingdom(id);
+                    actionCell.appendChild(deleteButton);
+                });
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='2'>No Kingdom IDs registered yet.</td></tr>";
+            }
+            document.getElementById('newKingdomId').value = ''; // Clear new kingdom input
+            setMessage('manageKingdomsMessage', '', 'success'); // Clear any previous message
+        }
+
+        // Add a new kingdom ID to the user's account
+        function addNewKingdom() {
+            if (!currentUser) return;
+            const newKid = document.getElementById('newKingdomId').value.trim();
+            if (!newKid) {
+                setMessage('manageKingdomsMessage', 'Please enter a Kingdom ID.', 'error');
+                return;
+            }
+
+            showLoading('manageKingdomsMessage', 'Adding kingdom...'); // Show loading indicator
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    hideLoading('manageKingdomsMessage'); // Hide loading
+                    if (response.success) {
+                        setMessage('manageKingdomsMessage', response.message, 'success');
+                        // Update currentUser object with new kingdom ID if not already present (server-side check)
+                        if (!currentUser.kingdomIds.includes(newKid)) {
+                            currentUser.kingdomIds.push(newKid);
+                        }
+                        loadUserKingdoms(); // Reload the list
+                    } else {
+                        setMessage('manageKingdomsMessage', response.message, 'error');
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('manageKingdomsMessage'); // Hide loading
+                    setMessage('manageKingdomsMessage', "Error adding kingdom: " + error.message, 'error');
+                })
+                .addKingdomToUser(currentUser.username, newKid);
+        }
+
+        // Delete a kingdom ID from the user's account with confirmation
+        function deleteKingdom(kingdomId) {
+            if (!currentUser) return;
+            if (confirm(`Are you sure you want to delete Kingdom ID: ${kingdomId}? This action cannot be undone.`)) {
+                showLoading('manageKingdomsMessage', 'Deleting kingdom...'); // Show loading indicator
+                google.script.run
+                    .withSuccessHandler(function(response) {
+                        hideLoading('manageKingdomsMessage'); // Hide loading
+                        if (response.success) {
+                            setMessage('manageKingdomsMessage', response.message, 'success');
+                            // Update currentUser object by filtering out the deleted ID
+                            currentUser.kingdomIds = currentUser.kingdomIds.filter(id => id !== kingdomId);
+                            loadUserKingdoms(); // Reload the list
+                        } else {
+                            setMessage('manageKingdomsMessage', response.message, 'error');
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        hideLoading('manageKingdomsMessage'); // Hide loading
+                        setMessage('manageKingdomsMessage', "Error deleting kingdom: " + error.message, 'error');
+                    })
+                    .deleteKingdomFromUser(currentUser.username, kingdomId);
+            }
+        }
+
+
+        function getAdminUsers() {
+            const tableBody = document.querySelector("#adminUsersTable tbody");
+            tableBody.innerHTML = "<tr><td colspan='3'>Loading users...</td></tr>";
+            showLoading('adminContributionMessage', 'Fetching user list...'); // Re-use message div, or add new one if preferred
+
+            google.script.run
+                .withSuccessHandler(function(users) {
+                    hideLoading('adminContributionMessage');
+                    displayAdminUsers(users);
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('adminContributionMessage');
+                    tableBody.innerHTML = `<tr><td colspan='3' class="message error-message">Error fetching users: ${error.message}</td></tr>`;
+                    setMessage('adminContributionMessage', "Error fetching users: " + error.message, 'error');
+                    console.error("Error fetching admin users:", error);
+                })
+                .getAdminUsers();
+        }
+
+        function displayAdminUsers(users) {
+             const tableBody = document.querySelector("#adminUsersTable tbody");
+             tableBody.innerHTML = "";
+             if (users && users.length > 0) {
+                 users.forEach(user => {
+                     const row = tableBody.insertRow();
+                     row.insertCell(0).textContent = user.username;
+                     row.insertCell(1).textContent = user.walletAddress;
+                     row.insertCell(2).textContent = user.kingdomIds.join(', ');
+                 });
+             } else {
+                 tableBody.innerHTML = "<tr><td colspan='3'>No registered users found.</td></tr>";
+             }
+             // Ensure search filter is applied if there's text
+             filterTable('adminUsersTable', 'userSearch');
+        }
+
+
+        function getAdminContributions() {
+            const period = document.getElementById('adminContributionPeriod').value;
+            const tableBody = document.querySelector("#adminContributionTable tbody");
+            tableBody.innerHTML = "<tr><td colspan='5'>Fetching all user contributions...</td></tr>";
+            document.getElementById('adminOverallTotal').textContent = 'Calculating...';
+            showLoading('adminContributionMessage', 'Fetching all contributions...');
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    hideLoading('adminContributionMessage');
+                    displayAdminContributions(response.data); // Data is already aggregated here
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('adminContributionMessage');
+                    tableBody.innerHTML = `<tr><td colspan='5' class="message error-message">Error fetching admin contributions: ${error.message}</td></tr>`;
+                    document.getElementById('adminOverallTotal').textContent = 'Error';
+                    setMessage('adminContributionMessage', "Error fetching admin contributions: " + error.message, 'error');
+                    console.error("Error fetching admin contributions:", error);
+                })
+                .getAllUsersContributions(period);
+        }
+
+        function displayAdminContributions(data) { // Data is now pre-aggregated from the server
+            const tableBody = document.querySelector("#adminContributionTable tbody");
+            tableBody.innerHTML = "";
+            let overallTotal = 0;
+
+            if (data && data.length > 0) {
+                // Data is already aggregated by username-kingdomId on the server
+                data.forEach(item => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = item.username;
+                    row.insertCell(1).textContent = item.kingdomId;
+                    row.insertCell(2).textContent = item.name;
+                    row.insertCell(3).textContent = item.continent;
+                    row.insertCell(4).textContent = item.total.toLocaleString(); // Format number
+                    overallTotal += item.total;
+                });
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='5'>No Contributions Found for the selected period for all users.</td></tr>";
+            }
+            document.getElementById('adminOverallTotal').textContent = overallTotal.toLocaleString();
+            // Ensure search filter is applied if there's text
+            filterTable('adminContributionTable', 'contributionSearch');
+        }
+
+        function getTopContributorsData() {
+            const period = document.getElementById('topContributorPeriod').value;
+            const tableBody = document.querySelector("#topContributorsTable tbody");
+            tableBody.innerHTML = "<tr><td colspan='3'>Loading top contributors...</td></tr>";
+            document.getElementById('topContributorsOverallTotal').textContent = 'Calculating...';
+            showLoading('topContributorsMessage', 'Fetching top contributors...');
+
+            google.script.run
+                .withSuccessHandler(function(response) {
+                    hideLoading('topContributorsMessage');
+                    displayTopContributors(response.data, response.from, response.to);
+                })
+                .withFailureHandler(function(error) {
+                    hideLoading('topContributorsMessage');
+                    tableBody.innerHTML = `<tr><td colspan='3' class="message error-message">Error fetching top contributors: ${error.message}</td></tr>`;
+                    document.getElementById('topContributorsOverallTotal').textContent = 'Error';
+                    setMessage('topContributorsMessage', "Error fetching top contributors: " + error.message, 'error');
+                    console.error("Error fetching top contributors:", error);
+                })
+                .getTopContributors(period);
+        }
+
+        function displayTopContributors(data, fromDate, toDate) {
+            const tableBody = document.querySelector("#topContributorsTable tbody");
+            tableBody.innerHTML = "";
+            let periodTotal = 0;
+
+            if (data && data.length > 0) {
+                data.forEach((item, index) => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = index + 1; // Rank
+                    row.insertCell(1).textContent = item.username;
+                    row.insertCell(2).textContent = item.totalContribution.toLocaleString();
+                    periodTotal += item.totalContribution;
+                });
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='3'>No top contributors found for this period.</td></tr>";
+            }
+            document.getElementById('topContributorsOverallTotal').textContent = periodTotal.toLocaleString();
+        }
+
+
+        function exportUserContributionsToCSV() {
+            const table = document.getElementById("userContributionTable");
+            exportTableToCSV(table, "user_contributions.csv");
+        }
+
+        function exportAdminContributionsToCSV() {
+            const table = document.getElementById("adminContributionTable");
+            exportTableToCSV(table, "all_users_contributions.csv");
+        }
+
+        function exportTableToCSV(table, filename) {
+            const csv = [];
+            // Get table headers (from thead)
+            const headerRow = table.querySelector("thead tr");
+            if (headerRow) {
+                const headers = Array.from(headerRow.querySelectorAll("th")).map(th => {
+                    let text = th.innerText.replace(/ \u25B2| \u25BC/, ''); // Remove sort arrows
+                    if (text.includes(',')) {
+                        text = `"${text.replace(/"/g, '""')}"`;
+                    }
+                    return text;
+                });
+                csv.push(headers.join(","));
+            }
+
+            // Get table body rows
+            const rows = table.querySelectorAll("tbody tr");
+            for (let i = 0; i < rows.length; i++) {
+                const row = [], cols = rows[i].querySelectorAll("td"); // Only consider <td> for data
+                if (cols.length > 0 && cols[0].colSpan !== table.rows[0].cells.length) { // Ensure it's not a loading/empty message row
+                    for (let j = 0; j < cols.length; j++) {
+                        let text = cols[j].innerText;
+                        // Handle commas within cells by enclosing in double quotes
+                        if (text.includes(',')) {
+                            text = `"${text.replace(/"/g, '""')}"`; // Escape double quotes
+                        }
+                        row.push(text);
+                    }
+                    csv.push(row.join(","));
+                }
+            }
+
+            const csvFile = new Blob([csv.join("\n")], { type: "text/csv;charset=utf-8;" });
+            const downloadLink = document.createElement("a");
+            downloadLink.href = URL.createObjectURL(csvFile);
+            downloadLink.download = filename;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        // --- NEW FEATURES ---
+
+        // Generic Table Sorting Function
+        let sortDirections = {}; // Store sort direction for each table/column
+
+        function sortTable(tableId, n) {
+            const table = document.getElementById(tableId);
+            let rows = Array.from(table.rows).slice(1); // Exclude header row
+            const isTotalRowPresent = table.querySelector('.total-row');
+            if (isTotalRowPresent) {
+                rows = rows.slice(0, -1); // Exclude total row if present
+            }
+
+            const header = table.querySelector('th:nth-child(' + (n + 1) + ')');
+
+            let direction = sortDirections[tableId + '_' + n] || 'asc';
+            const isNumeric = header.textContent.includes('Points') || header.textContent.includes('Rank') || header.textContent.includes('Total Contribution');
+
+            rows.sort((rowA, rowB) => {
+                let x = rowA.cells[n].innerText;
+                let y = rowB.cells[n].innerText;
+
+                if (isNumeric) {
+                    x = parseFloat(x.replace(/,/g, '')) || 0; // Handle thousands separators
+                    y = parseFloat(y.replace(/,/g, '')) || 0;
+                } else {
+                    x = x.toLowerCase();
+                    y = y.toLowerCase();
+                }
+
+                if (direction === 'asc') {
+                    return x > y ? 1 : -1;
+                } else {
+                    return x < y ? 1 : -1;
+                }
+            });
+
+            // Toggle sort direction for next click
+            sortDirections[tableId + '_' + n] = (direction === 'asc') ? 'desc' : 'asc';
+
+            // Update header classes for arrows
+            Array.from(table.querySelectorAll('th')).forEach((th, index) => {
+                th.classList.remove('asc', 'desc');
+                if (index === n) {
+                    th.classList.add(direction); // Apply the direction used for sorting *this* time
+                }
+            });
+
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = ''; // Clear current rows
+            rows.forEach(row => tbody.appendChild(row)); // Append sorted rows
+
+            if (isTotalRowPresent) {
+                tbody.appendChild(isTotalRowPresent); // Re-append total row at the end
+            }
+        }
+
+        // Generic Table Filter Function
+        function filterTable(tableId, inputId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById(tableId);
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) { // Skip header row
+                let rowText = "";
+                const cells = tr[i].getElementsByTagName("td");
+                // Concatenate text from relevant cells for filtering
+                for (let j = 0; j < cells.length; j++) {
+                    rowText += cells[j].textContent + " ";
+                }
+                if (rowText.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    </script>
 </body>
 </html>
