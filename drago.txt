@@ -1,0 +1,513 @@
+{
+    "result": true,
+    "publicKey": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+    "dragos": [
+        {
+            "lair": {
+                "status": 3,
+                "lairId": "67d7eca12950a3381ebc516e",
+                "leaveDate": "2025-04-25T22:07:52.506Z",
+                "joinDate": "2025-04-26T12:34:59.759Z",
+                "defenseDate": "2025-04-19T10:23:17.445Z"
+            },
+            "rent": {
+                "stats": {
+                    "currentDSA": 112000,
+                    "currentGathering": 56,
+                    "currentProfit": 44800,
+                    "totalRental": 17,
+                    "totalDSA": 1995314,
+                    "totalGathering": 759,
+                    "totalProfit": 397245,
+                    "unclaimedProfit": 8800
+                },
+                "status": 1,
+                "expireDate": "2026-04-25T22:07:52.498Z",
+                "from": "0x435ae92777ab6225a776e74d218a146e87b9e4ab",
+                "profitShareRatio": 0.4,
+                "startDate": "2025-04-25T22:07:52.498Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "62940b5adac142b8bd2b7459",
+            "tokenId": 11012,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 0,
+            "fusion": 0,
+            "grade": 2
+        },
+        {
+            "lair": {
+                "lairId": "6716055e58f73c2ae87c9df8",
+                "leaveDate": "2025-06-12T13:03:43.457Z",
+                "status": 3,
+                "joinDate": "2025-06-12T13:17:55.877Z",
+                "defenseDate": "2024-12-26T20:20:49.910Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 9000,
+                    "currentDSA": 90000,
+                    "currentGathering": 37,
+                    "currentProfit": 9000,
+                    "totalRental": 5,
+                    "totalDSA": 328493,
+                    "totalGathering": 165,
+                    "totalProfit": 128247
+                },
+                "status": 1,
+                "expireDate": "2026-05-24T10:47:16.894Z",
+                "from": "0xfbc7e5fd5abd90dcb014032ae27a5e0d1a31b2af",
+                "profitShareRatio": 0.1,
+                "startDate": "2025-05-24T10:47:16.894Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "62940c88dac142b8bda1efaf",
+            "tokenId": 11309,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 1,
+            "fusion": 2,
+            "grade": 2
+        },
+        {
+            "lair": {
+                "status": 2,
+                "lairId": "6716055e58f73c2ae87c9df8",
+                "leaveDate": "2025-06-12T12:48:10.926Z",
+                "joinDate": "2025-06-12T13:22:29.640Z",
+                "defenseDate": "2025-06-12T13:22:45.962Z"
+            },
+            "rent": {
+                "stats": {
+                    "currentDSA": 0,
+                    "currentGathering": 0,
+                    "currentProfit": 0,
+                    "totalRental": 6,
+                    "totalDSA": 1883348,
+                    "totalGathering": 694,
+                    "totalProfit": 941674,
+                    "unclaimedProfit": 0
+                },
+                "status": 1,
+                "expireDate": "2026-06-12T12:48:10.912Z",
+                "from": "0xb7e64b0e48a8fb7feee2bedbdc8b69a849bd9575",
+                "profitShareRatio": 0.3,
+                "startDate": "2025-06-12T12:48:10.912Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "62a1916fdac142b8bdb1d672",
+            "tokenId": 18752,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 1,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 3,
+                "lairId": "67d7eca12950a3381ebc516e",
+                "leaveDate": "2025-06-12T12:48:30.539Z",
+                "joinDate": "2025-06-12T12:56:49.418Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 0,
+                    "currentDSA": 0,
+                    "currentGathering": 0,
+                    "currentProfit": 0,
+                    "totalRental": 5,
+                    "totalDSA": 1689764,
+                    "totalGathering": 667,
+                    "totalProfit": 844883
+                },
+                "status": 1,
+                "expireDate": "2026-06-12T12:48:30.531Z",
+                "from": "0xb7e64b0e48a8fb7feee2bedbdc8b69a849bd9575",
+                "profitShareRatio": 0.3,
+                "startDate": "2025-06-12T12:48:30.531Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "62a19336dac142b8bd73edd0",
+            "tokenId": 18843,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 0,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 0,
+                "lairId": null,
+                "leaveDate": "2025-06-12T12:48:50.729Z",
+                "joinDate": "2024-05-31T18:57:27.900Z",
+                "defenseDate": "2025-03-22T21:23:56.018Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 0,
+                    "currentDSA": 0,
+                    "currentGathering": 0,
+                    "currentProfit": 0,
+                    "totalRental": 5,
+                    "totalDSA": 1985846,
+                    "totalGathering": 685,
+                    "totalProfit": 992923
+                },
+                "status": 1,
+                "expireDate": "2026-06-12T12:48:50.722Z",
+                "from": "0xb7e64b0e48a8fb7feee2bedbdc8b69a849bd9575",
+                "profitShareRatio": 0.3,
+                "startDate": "2025-06-12T12:48:50.722Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "62a198addac142b8bdb704ad",
+            "tokenId": 19058,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 0,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 0,
+                "lairId": null,
+                "leaveDate": "2025-06-12T12:49:11.239Z",
+                "joinDate": "2024-06-01T07:54:02.263Z",
+                "defenseDate": "2024-02-19T10:15:59.682Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 0,
+                    "currentDSA": 0,
+                    "currentGathering": 0,
+                    "currentProfit": 0,
+                    "totalRental": 5,
+                    "totalDSA": 976770,
+                    "totalGathering": 408,
+                    "totalProfit": 488385
+                },
+                "status": 1,
+                "expireDate": "2026-06-12T12:49:11.229Z",
+                "from": "0xb7e64b0e48a8fb7feee2bedbdc8b69a849bd9575",
+                "profitShareRatio": 0.3,
+                "startDate": "2025-06-12T12:49:11.229Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "62a19c44dac142b8bd416c27",
+            "tokenId": 19303,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 0,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 3,
+                "lairId": "65d48064c73af50455965c23",
+                "leaveDate": "2025-05-08T15:55:50.836Z",
+                "joinDate": "2025-05-08T16:09:50.942Z",
+                "defenseDate": "2025-03-06T22:37:58.973Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 3600,
+                    "currentDSA": 64000,
+                    "currentGathering": 32,
+                    "currentProfit": 6400,
+                    "totalRental": 8,
+                    "totalDSA": 905382,
+                    "totalGathering": 375,
+                    "totalProfit": 432595
+                },
+                "status": 1,
+                "expireDate": "2025-08-06T15:55:50.824Z",
+                "from": "0xc888b14d91b1c6001d53e221778849d300d1dca1",
+                "profitShareRatio": 0.1,
+                "startDate": "2025-05-08T15:55:50.824Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "644be3033f83432c36daa87d",
+            "tokenId": 24076,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 2,
+            "fusion": 1,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 3,
+                "joinDate": "2025-05-04T15:43:34.857Z",
+                "lairId": "65d48064c73af50455965c23",
+                "leaveDate": "2025-05-04T12:15:20.711Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 9600,
+                    "currentDSA": 107000,
+                    "currentGathering": 53,
+                    "currentProfit": 32100,
+                    "totalRental": 9,
+                    "totalDSA": 502594,
+                    "totalGathering": 252,
+                    "totalProfit": 213179
+                },
+                "status": 1,
+                "expireDate": "2025-07-14T16:38:10.307Z",
+                "from": "0x0d2ee93ad04fbcbbb0396db02455d4eac5ef31b5",
+                "profitShareRatio": 0.3,
+                "startDate": "2025-04-15T16:38:10.307Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "645fcacb3f83432c36869df1",
+            "tokenId": 27212,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 3,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 3,
+                "lairId": "6716055e58f73c2ae87c9df8",
+                "leaveDate": "2025-06-11T16:45:04.958Z",
+                "joinDate": "2025-06-11T16:47:17.150Z",
+                "defenseDate": "2025-04-14T11:33:48.428Z"
+            },
+            "rent": {
+                "stats": {
+                    "currentDSA": 11000,
+                    "currentGathering": 9,
+                    "currentProfit": 5500,
+                    "totalRental": 2,
+                    "totalDSA": 18000,
+                    "totalGathering": 12,
+                    "totalProfit": 9000,
+                    "unclaimedProfit": 0
+                },
+                "status": 0,
+                "expireDate": "2024-05-09T07:05:46.792Z",
+                "from": "0xfbc7e5fd5abd90dcb014032ae27a5e0d1a31b2af",
+                "profitShareRatio": 0.5,
+                "startDate": "2024-04-09T07:05:46.792Z",
+                "to": "0xb455befeeebf71ac830a2add4d170c22164ebf7c"
+            },
+            "_id": "649310072160376cdb18f1e7",
+            "tokenId": 33891,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 3,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 3,
+                "lairId": "6716055e58f73c2ae87c9df8",
+                "leaveDate": "2025-06-12T03:39:35.442Z",
+                "joinDate": "2025-06-12T13:17:42.163Z",
+                "defenseDate": "2025-06-11T01:07:43.410Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 300,
+                    "currentDSA": 3000,
+                    "currentGathering": 1,
+                    "currentProfit": 300,
+                    "totalRental": 9,
+                    "totalDSA": 3000,
+                    "totalGathering": 1,
+                    "totalProfit": 300
+                },
+                "status": 1,
+                "expireDate": "2025-07-11T03:59:33.584Z",
+                "from": "0xdeb65a4a14ba9b6dd42ac9bcab3bf9bec547e7c1",
+                "profitShareRatio": 0.1,
+                "startDate": "2025-06-11T03:59:33.584Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "64a6b93bbb3344b1085b9d8b",
+            "tokenId": 36492,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 2,
+            "fusion": 2,
+            "grade": 1
+        },
+        {
+            "lair": {
+                "status": 3,
+                "lairId": "6716055e58f73c2ae87c9df8",
+                "leaveDate": "2025-06-10T17:58:22.740Z",
+                "joinDate": "2025-06-10T18:01:20.189Z",
+                "defenseDate": "2025-05-29T04:34:47.219Z"
+            },
+            "rent": {
+                "stats": {
+                    "unclaimedProfit": 7900,
+                    "currentDSA": 126000,
+                    "currentGathering": 47,
+                    "currentProfit": 12600,
+                    "totalRental": 11,
+                    "totalDSA": 915666,
+                    "totalGathering": 337,
+                    "totalProfit": 390033
+                },
+                "status": 1,
+                "expireDate": "2025-08-06T15:56:29.893Z",
+                "from": "0xc888b14d91b1c6001d53e221778849d300d1dca1",
+                "profitShareRatio": 0.1,
+                "startDate": "2025-05-08T15:56:29.893Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "6512ccf857295e50afe3ab92",
+            "tokenId": 40590,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 2,
+            "fusion": 3,
+            "grade": 1
+        },
+        {
+            "lair": {
+                "status": 1,
+                "lairId": "65ab0031bedea7158043d382",
+                "leaveDate": "2025-06-02T15:17:58.026Z",
+                "joinDate": "2025-06-02T15:20:18.129Z",
+                "defenseDate": "2025-05-24T03:17:04.244Z"
+            },
+            "rent": {
+                "stats": {
+                    "currentDSA": 134000,
+                    "currentGathering": 55,
+                    "currentProfit": 53600,
+                    "totalRental": 7,
+                    "unclaimedProfit": 11200,
+                    "totalDSA": 475968,
+                    "totalGathering": 226,
+                    "totalProfit": 159761
+                },
+                "status": 1,
+                "expireDate": "2026-04-16T07:41:58.358Z",
+                "from": "0x0598e076faf867ad1d1424a1996a2c61c5904077",
+                "profitShareRatio": 0.4,
+                "startDate": "2025-04-16T07:41:58.358Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "656e149f660f03de8e94ac30",
+            "tokenId": 43120,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 2,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 1,
+                "lairId": "67455b0d22fb484a05da886b",
+                "leaveDate": "2025-04-18T04:01:47.353Z",
+                "joinDate": "2025-04-18T04:10:36.712Z",
+                "defenseDate": "2025-02-22T21:51:34.747Z"
+            },
+            "rent": {
+                "stats": {
+                    "currentDSA": 124000,
+                    "currentGathering": 62,
+                    "currentProfit": 37200,
+                    "totalRental": 6,
+                    "totalDSA": 600522,
+                    "totalGathering": 241,
+                    "totalProfit": 252067,
+                    "unclaimedProfit": 11400
+                },
+                "status": 1,
+                "expireDate": "2025-07-14T16:38:44.668Z",
+                "from": "0x0d2ee93ad04fbcbbb0396db02455d4eac5ef31b5",
+                "profitShareRatio": 0.3,
+                "startDate": "2025-04-15T16:38:44.668Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "6634d98ba0b94cd8d296a433",
+            "tokenId": 44356,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 2,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 3,
+                "lairId": "67d7eca12950a3381ebc516e",
+                "leaveDate": "2025-04-16T07:42:33.369Z",
+                "joinDate": "2025-04-16T18:33:11.330Z"
+            },
+            "rent": {
+                "stats": {
+                    "currentDSA": 127000,
+                    "currentGathering": 64,
+                    "currentProfit": 50800,
+                    "totalRental": 3,
+                    "unclaimedProfit": 7200,
+                    "totalDSA": 271000,
+                    "totalGathering": 132,
+                    "totalProfit": 99400
+                },
+                "status": 1,
+                "expireDate": "2026-04-16T07:42:33.360Z",
+                "from": "0x0598e076faf867ad1d1424a1996a2c61c5904077",
+                "profitShareRatio": 0.4,
+                "startDate": "2025-04-16T07:42:33.360Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "6715cca7f9c43a0c0a02789e",
+            "tokenId": 46778,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 2,
+            "fusion": 0,
+            "grade": 0
+        },
+        {
+            "lair": {
+                "status": 1,
+                "lairId": "67455b0d22fb484a05da886b",
+                "leaveDate": "2025-05-12T12:10:22.547Z",
+                "joinDate": "2025-05-12T12:10:43.160Z",
+                "defenseDate": "2025-03-22T10:40:14.325Z"
+            },
+            "rent": {
+                "stats": {
+                    "currentDSA": 135000,
+                    "currentGathering": 60,
+                    "currentProfit": 40500,
+                    "totalRental": 4,
+                    "totalDSA": 335000,
+                    "totalGathering": 160,
+                    "totalProfit": 100500,
+                    "unclaimedProfit": 12600
+                },
+                "status": 1,
+                "expireDate": "2025-07-14T16:33:34.910Z",
+                "from": "0x0d2ee93ad04fbcbbb0396db02455d4eac5ef31b5",
+                "profitShareRatio": 0.3,
+                "startDate": "2025-04-15T16:33:34.910Z",
+                "to": "0xd7dd113f44eca0079f78892d1165aa03e060debd"
+            },
+            "_id": "67215dfb696f5ec00264fa40",
+            "tokenId": 47054,
+            "owner": "0xd7dd113f44eca0079f78892d1165aa03e060debd",
+            "status": 2,
+            "breed": 0,
+            "fusion": 0,
+            "grade": 1
+        }
+    ]
+}
